@@ -1,0 +1,196 @@
+// ===============================================================
+// Sukoon Firestore Security Rules
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Fixed: use role field instead of hardcoded email
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             (data.preferredLanguage in ['en', 'hi', 'ur']) &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMood(data) {
+      return data.uid == request.auth.uid &&
+             data.timestamp is timestamp &&
+             (data.mood in ['calm', 'anxious', 'stressed', 'sad', 'neutral', 'happy']) &&
+             (!('note' in data) || (data.note is string && data.note.size() <= 1000)) &&
+             (!('intensity' in data) || (data.intensity is int && data.intensity >= 1 && data.intensity <= 10));
+    }
+
+    function isValidJournal(data) {
+      return data.uid == request.auth.uid &&
+             data.timestamp is timestamp &&
+             data.content is string && data.content.size() <= 10000 &&
+             (!('title' in data) || (data.title is string && data.title.size() <= 200)) &&
+             (!('sentiment' in data) || (data.sentiment is string && data.sentiment.size() <= 100));
+    }
+
+    function isValidGoal(data) {
+      return data.uid == request.auth.uid &&
+             data.title is string && data.title.size() <= 200 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             (data.frequency in ['daily', 'weekly']) &&
+             data.completedDates is list &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMemory(data) {
+      return data.uid == request.auth.uid &&
+             data.patternName is string && data.patternName.size() <= 200 &&
+             data.observation is string && data.observation.size() <= 5000 &&
+             data.type in ['trigger', 'strength', 'insight'] &&
+             data.lastTriggered is timestamp;
+    }
+
+    function isValidDecision(data) {
+      return data.uid == request.auth.uid &&
+             data.problem is string && data.problem.size() <= 1000 &&
+             data.analysis is map &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidFutureMeMessage(data) {
+      return data.uid == request.auth.uid &&
+             (data.type in ['text', 'audio', 'video']) &&
+             data.content is string &&
+             data.tags is list && data.tags.size() >= 1 &&
+             (!('prompt' in data) || (data.prompt is string && data.prompt.size() <= 1000)) &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) &&
+                     request.resource.data.uid == resource.data.uid &&
+                     request.resource.data.createdAt == resource.data.createdAt;
+
+      match /chat/{msgId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                      request.resource.data.role in ['user', 'model'] &&
+                      request.resource.data.content is string &&
+                      request.resource.data.content.size() <= 10000 &&
+                      request.resource.data.timestamp is timestamp;
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    match /moods/{moodId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidMood(request.resource.data);
+      allow update: if isDocOwner() && isValidMood(request.resource.data) &&
+                     request.resource.data.uid == resource.data.uid &&
+                     request.resource.data.timestamp == resource.data.timestamp;
+      allow delete: if isDocOwner();
+    }
+
+    match /journal/{entryId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidJournal(request.resource.data);
+      allow update: if isDocOwner() && isValidJournal(request.resource.data) &&
+                     request.resource.data.uid == resource.data.uid &&
+                     request.resource.data.timestamp == resource.data.timestamp;
+      allow delete: if isDocOwner();
+    }
+
+    match /goals/{goalId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidGoal(request.resource.data);
+      allow update: if isDocOwner() && isValidGoal(request.resource.data) &&
+                     request.resource.data.uid == resource.data.uid &&
+                     request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner();
+    }
+
+    match /memories/{memoryId} {
+      allow read: if isDocOwner();
+      allow create, update: if isDocOwner() && isValidMemory(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /decisions/{sessionId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidDecision(request.resource.data);
+      allow update: if isDocOwner() && isValidDecision(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /futureMeMessages/{messageId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidFutureMeMessage(request.resource.data);
+      allow update: if isDocOwner() && isValidFutureMeMessage(request.resource.data) &&
+                     request.resource.data.uid == resource.data.uid &&
+                     request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner();
+    }
+
+    // Wall of Hope: rate limit — 1 post per 60 seconds per user
+    match /wallOfHope/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                    request.resource.data.text is string &&
+                    request.resource.data.text.size() >= 1 &&
+                    request.resource.data.text.size() <= 1000 &&
+                    request.resource.data.authorLang in ['en', 'hi', 'ur'] &&
+                    request.resource.data.createdAt == request.time &&
+                    request.resource.data.uid == request.auth.uid &&
+                    (
+                      !exists(/databases/$(database)/documents/wallOfHopeRateLimit/$(request.auth.uid)) ||
+                      get(/databases/$(database)/documents/wallOfHopeRateLimit/$(request.auth.uid)).data.lastPostAt < request.time - duration.value(60, 's')
+                    );
+      allow update: if isAuthenticated() &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
+                    (request.resource.data.likes == resource.data.likes + 1 || request.resource.data.likes == resource.data.likes - 1);
+      allow delete: if isAdmin();
+    }
+
+    // Rate limit tracker (write-only by owner)
+    match /wallOfHopeRateLimit/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
