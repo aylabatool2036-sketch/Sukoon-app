@@ -21,7 +21,7 @@ export const MessageItem = React.memo(({ message }: MessageItemProps) => {
       )}
     >
       <div className={cn(
-        "flex max-w-[85%] gap-3",
+        "flex max-w-[92%] sm:max-w-[85%] md:max-w-[75%] gap-3",
         isUser ? "flex-row-reverse text-right" : "flex-row"
       )}>
         <div className={cn(

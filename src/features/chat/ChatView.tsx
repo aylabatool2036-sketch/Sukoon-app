@@ -27,7 +27,7 @@ export const ChatView = ({
   onClearHistory 
 }: ChatViewProps) => {
   return (
-    <Card className="flex flex-col h-[calc(100dvh-180px)] md:h-[650px] border-0 bg-transparent relative overflow-hidden group">
+    <Card className="flex flex-col h-[calc(100dvh-160px)] sm:h-[calc(100dvh-180px)] md:h-[700px] lg:h-[800px] border-0 bg-transparent relative overflow-hidden group transition-all duration-300">
       {/* Header with Privacy Action */}
       <div className="flex items-center justify-between px-4 pb-2">
         <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Secure conversation</h3>

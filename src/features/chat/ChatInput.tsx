@@ -20,22 +20,22 @@ export const ChatInput = ({ onSendMessage, disabled, placeholder }: ChatInputPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 bg-white/50 border-t border-gray-50 rounded-b-[40px] relative z-10">
+    <form onSubmit={handleSubmit} className="p-4 sm:p-6 bg-white/50 border-t border-gray-50 rounded-b-[40px] relative z-10">
       <div className="flex gap-2 relative">
         <Input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className="flex-1 h-14 pr-16 bg-white shadow-inner border-gray-200 focus:border-primary-soft transition-all rounded-2xl"
+          className="flex-1 h-14 sm:h-16 pr-16 bg-white shadow-inner border-gray-200 focus:border-primary-soft transition-all rounded-2xl text-base sm:text-lg"
         />
         <Button 
           type="submit" 
           disabled={!input.trim() || disabled}
           size="icon"
-          className="absolute right-1.5 top-1.5 h-11 w-11 rounded-xl shadow-lg transition-transform active:scale-95"
+          className="absolute right-1.5 top-1.5 h-11 w-11 sm:h-13 sm:w-13 rounded-xl shadow-lg transition-transform active:scale-95"
         >
-          {disabled ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+          {disabled ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : <Send className="w-5 h-5 sm:w-6 sm:h-6" />}
         </Button>
       </div>
     </form>

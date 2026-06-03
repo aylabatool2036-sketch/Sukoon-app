@@ -101,7 +101,10 @@ export class GeminiService {
       
       const response = await fetch(chatUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
         body: JSON.stringify({ history, message }),
         signal: this.abortController.signal,
       });
@@ -149,6 +152,12 @@ export class GeminiService {
     } catch (error: any) {
       if (error.name === 'AbortError') return { text: '', error: 'Request cancelled' };
       console.error('Chat error:', error);
+      
+      // Check for specific network errors
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        return { text: '', error: 'I lost connection for a moment. Please check your internet and try again.' };
+      }
+      
       return { text: '', error: 'I lost connection for a moment. Please try sending that again.' };
     } finally {
       this.abortController = null;
