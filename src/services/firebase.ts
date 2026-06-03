@@ -251,10 +251,16 @@ export const dbService = {
           createdAt: serverTimestamp(),
         });
         
-        await setDoc(doc(db, 'wallOfHopeRateLimit', uid), {
-          lastPostAt: serverTimestamp(),
-          uid // Explicit uid for deletion logic
-        }, { merge: true });
+        // Update rate limit tracker (don't fail if this fails)
+        try {
+          await setDoc(doc(db, 'wallOfHopeRateLimit', uid), {
+            lastPostAt: serverTimestamp(),
+            uid // Explicit uid for deletion logic
+          }, { merge: true });
+        } catch (rateLimitError) {
+          console.warn('Rate limit tracker update failed:', rateLimitError);
+          // Don't throw - post was successful
+        }
         
         return postRef;
       } catch (e) {
