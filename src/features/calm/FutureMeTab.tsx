@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { app } from '@/src/lib/firebase'; // Import the Firebase app instance
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { storage } from '@/src/lib/firebase'; // Import the Firebase app instance
 
 
 import { Mic, Send, Play, Square, Trash2, Clock, Sparkles, MessageSquare, Loader2, Anchor } from 'lucide-react';
@@ -22,7 +22,6 @@ export const FutureMeTab = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const storage = getStorage(app); // Initialize Firebase Storage
 
   const audioChunksRef = useRef<Blob[]>([]);
 

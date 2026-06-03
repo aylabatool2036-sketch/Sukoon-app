@@ -1,62 +1,44 @@
 # Security Audit Report - Sukoon AI
 
 ## Executive Summary
-This audit was performed on the Sukoon AI application codebase to identify and remediate security weaknesses. The review covered authentication, authorization, API security, dependency management, data privacy, and compliance (Play Console/Privacy Policy). Key areas of improvement included dependency vulnerabilities, lack of secure HTTP headers, insufficient input validation on the server, permissive Firestore/Storage rules, and incomplete data deletion logic.
+This audit was performed on the Sukoon AI application codebase to identify and remediate security weaknesses. The review covered authentication, authorization, API security, dependency management, data privacy, and compliance. Key improvements were made to solve connectivity issues (CSP), ensure complete data deletion, and harden the server against common attacks.
 
-## Vulnerability Findings
+## Vulnerability Findings & Fixes
 
-### 1. Vulnerable Dependencies (Resolved)
+### 1. Content Security Policy (CSP) Blocking Firebase (Resolved)
+- **Risk Level:** Medium (Availability)
+- **Impact:** Legitimate requests to Firebase Firestore and Auth were blocked by strict browser CSP headers, causing the app to appear broken (e.g., mood entries not displaying).
+- **Remediation:** Expanded `helmet` configuration in `server.ts` to permit connections to `*.googleapis.com`, `*.firebaseio.com`, and `*.firebasestorage.app`. Added support for Capacitor (`capacitor://localhost`) and local development.
+
+### 2. Incomplete Data Erasure (Resolved)
+- **Risk Level:** Medium (Privacy Compliance/GDPR)
+- **Impact:** The `deleteAccount` function previously missed deleting user posts on the "Wall of Hope" and user-uploaded voice notes in Firebase Storage.
+- **Remediation:** Updated `dbService.auth.deleteAccount` to recursively purge all collections including `wallOfHope`, and added logic to delete all files in the user's Storage directory (`futureMeAudio/{uid}/`).
+
+### 3. Vulnerable Dependencies (Resolved)
 - **Risk Level:** Medium
-- **Impact:** Potential Denial of Service (DoS) through `protobufjs` and `qs` packages.
-- **Remediation:** Updated `qs` and used `pnpm` overrides to ensure secure versions are used across the dependency tree.
+- **Impact:** Potential vulnerabilities in `qs` and `protobufjs`.
+- **Remediation:** Updated packages and applied `pnpm` overrides to ensure patched versions are used.
 
-### 2. Lack of Secure HTTP Headers (Resolved)
-- **Risk Level:** Low-Medium
-- **Impact:** The server was not using standard security headers, making it more susceptible to common web attacks.
-- **Remediation:** Integrated `helmet` middleware in `server.ts` to set secure HTTP headers.
-
-### 3. Missing Input Validation on API Endpoints (Resolved)
+### 4. API Input Validation & Rate Limiting (Resolved)
 - **Risk Level:** Medium
-- **Impact:** The `/api/reassurance` and `/api/chat` endpoints accepted unvalidated JSON bodies.
-- **Remediation:** Implemented strict schema validation using `zod` for all API request bodies. Added length limits to string inputs and payload size limits to the Express parser.
+- **Impact:** Unvalidated inputs could lead to injection or DoS.
+- **Remediation:** Implemented strict `zod` schemas for AI endpoints. Added `express-rate-limit` to prevent brute-force/abuse. Set body size limits to `10kb`.
 
-### 4. Permissive Firestore Security Rules (Resolved)
+### 5. Permissive Firestore & Storage Rules (Resolved)
 - **Risk Level:** High
-- **Impact:** Users could potentially modify their own `role` to `admin` or change immutable fields like `uid` and `createdAt`.
-- **Remediation:** Hardened `firestore.rules` with `isUnmodified` helper functions and restricted the `role` field from being set or updated by users.
+- **Impact:** Potential for unauthorized data access or modification.
+- **Remediation:** Hardened `firestore.rules` with ownership checks and restricted field updates (e.g., `role`). Implemented `storage.rules` to ensure only owners can access their voice notes.
 
-### 5. Insecure Firebase Storage Rules (Resolved)
-- **Risk Level:** High
-- **Impact:** Public access to user-uploaded voice notes or other assets.
-- **Remediation:** Implemented `storage.rules` to restrict read/write access to owners only, using path-based UID validation.
-
-### 6. Incomplete Data Deletion (Resolved)
-- **Risk Level:** Medium (Privacy Compliance)
-- **Impact:** Deleting an account only removed the Auth user and Profile doc, leaving behind mood logs, journal entries, and other PII.
-- **Remediation:** Implemented recursive deletion logic in `dbService.auth.deleteAccount` using Firestore batches to purge all user-associated records across all collections.
-
-### 7. Sensitive Data Exposure in Error Logs (Resolved)
+### 6. CORS Hardening (Resolved)
 - **Risk Level:** Low-Medium
-- **Impact:** Error messages leaked detailed user authentication state.
-- **Remediation:** Sanitized error handling in `src/services/firebase.ts`.
+- **Remediation:** Restricted `cors` origins to the production domain and known development origins, instead of a permissive default.
 
 ## Severity Ranking
-- **High:** Firestore Rule Privilege Escalation, Insecure Storage Rules
-- **Medium:** Missing Input Validation, Vulnerable Dependencies, Incomplete Data Deletion
-- **Low:** Information Leakage in Errors, Missing Security Headers
-
-## Remediation Checklist
-- [x] Update vulnerable packages
-- [x] Add `helmet` for secure headers
-- [x] Implement `zod` input validation
-- [x] Restrict Firestore field updates (`role`, `uid`, `createdAt`)
-- [x] Implement path-based Firebase Storage rules
-- [x] Implement recursive account deletion (Right to Erasure)
-- [x] Sanitize client-side error objects
-- [x] Update Privacy Policy with explicit data handling and AI sections
-- [x] Create Data Safety documentation for Play Console
+- **High:** Firestore/Storage Rules
+- **Medium:** CSP Connectivity, Data Deletion, Vulnerable Dependencies, API Validation
+- **Low:** CORS Configuration
 
 ## Secure Deployment Recommendations
-1. **Environment Variables:** Keep `GROQ_API_KEY` server-side.
-2. **CORS:** Restrict origin to production domain.
-3. **Monitoring:** Monitor for 403 (Permission Denied) spikes.
+1. **Secrets:** Ensure `GROQ_API_KEY` is only present in the server environment.
+2. **Monitoring:** Watch for `permission-denied` errors in Firestore logs which may indicate attempted abuse or misconfiguration.
