@@ -21,18 +21,42 @@ const PORT = Number(process.env.PORT) || 3000;
 
 // Security Middleware with custom CSP for Firebase
 app.use(helmet({
+  crossOriginEmbedderPolicy: false, // Required for some Firebase/Google resources
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "connect-src": ["'self'", "*.googleapis.com", "*.firebaseio.com", "https://sukoon-3al3.onrender.com"],
-      "img-src": ["'self'", "data:", "*.googleapis.com", "*.firebasestorage.app"],
-      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-inline/eval needed for some vite/firebase features
+      "connect-src": [
+        "'self'",
+        "https://*.googleapis.com",
+        "https://*.firebaseio.com",
+        "wss://*.firebaseio.com",
+        "https://*.firebasestorage.app",
+        "https://sukoon-3al3.onrender.com",
+        "capacitor://localhost",
+        "http://localhost:*"
+      ],
+      "img-src": [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://*.googleapis.com",
+        "https://*.firebasestorage.app",
+        "https://*.googleusercontent.com"
+      ],
+      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-eval often needed for Vite/Firebase in certain environments
+      "frame-src": ["'self'", "https://*.firebaseapp.com"],
+      "media-src": ["'self'", "blob:", "https://*.firebasestorage.app"],
     },
   },
 }));
 
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
+    "https://sukoon-3al3.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "capacitor://localhost"
+  ],
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));

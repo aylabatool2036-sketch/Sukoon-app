@@ -16,7 +16,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
-import { auth, db } from '../lib/firebase';
+import { ref, listAll, deleteObject } from 'firebase/storage';
+import { auth, db, storage } from '../lib/firebase';
 import {
   MoodEntry,
   JournalEntry,
@@ -69,6 +70,7 @@ export const dbService = {
         'memories',
         'decisions',
         'futureMeMessages',
+        'wallOfHope',
         'wallOfHopeRateLimit'
       ];
 
@@ -100,6 +102,15 @@ export const dbService = {
         await deleteDoc(doc(db, 'users', uid));
       } catch (e) {
         console.error("Error deleting profile:", e);
+      }
+
+      // Purge Firebase Storage assets
+      try {
+        const storageRef = ref(storage, `futureMeAudio/${uid}/`);
+        const fileList = await listAll(storageRef);
+        await Promise.all(fileList.items.map((file) => deleteObject(file)));
+      } catch (e) {
+        console.error("Error purging storage assets:", e);
       }
       
       // Finally, delete the user from Firebase Auth
