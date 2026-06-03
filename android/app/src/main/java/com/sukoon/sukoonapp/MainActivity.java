@@ -1,4 +1,4 @@
-package com.sukoon.app;
+package com.sukoon.sukoonapp;
 
 import com.getcapacitor.BridgeActivity;
 

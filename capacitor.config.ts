@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.sukoon.app',
+  appId: 'com.sukoon.sukoonapp',
   appName: 'Sukoon',
   webDir: 'dist',
 };

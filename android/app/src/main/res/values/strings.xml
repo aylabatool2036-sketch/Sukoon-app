@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Sukoon</string>
     <string name="title_activity_main">Sukoon</string>
-    <string name="package_name">com.sukoon.app</string>
-    <string name="custom_url_scheme">com.sukoon.app</string>
+    <string name="package_name">com.sukoon.sukoonapp</string>
+    <string name="custom_url_scheme">com.sukoon.sukoonapp</string>
 </resources>
