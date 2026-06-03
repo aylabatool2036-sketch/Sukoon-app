@@ -13,7 +13,6 @@ import {
   updateDoc,
   getDocs,
   deleteDoc,
-  Timestamp,
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
@@ -30,13 +29,6 @@ export interface FirestoreErrorInfo {
   error: string;
   operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write';
   path: string | null;
-  authInfo: {
-    userId: string;
-    email: string;
-    emailVerified: boolean;
-    isAnonymous: boolean;
-    providerInfo: { providerId: string; displayName: string; email: string }[];
-  };
 }
 
 const handleFirestoreError = (
@@ -46,22 +38,12 @@ const handleFirestoreError = (
 ): never => {
   if (error.code === 'permission-denied') {
     const errorInfo: FirestoreErrorInfo = {
-      error: error.message,
+      error: 'Access denied. You do not have permission to perform this action.',
       operationType,
       path,
-      authInfo: {
-        userId: auth.currentUser?.uid || 'anonymous',
-        email: auth.currentUser?.email || '',
-        emailVerified: auth.currentUser?.emailVerified || false,
-        isAnonymous: auth.currentUser?.isAnonymous || true,
-        providerInfo:
-          auth.currentUser?.providerData.map((p) => ({
-            providerId: p.providerId,
-            displayName: p.displayName || '',
-            email: p.email || '',
-          })) || [],
-      },
     };
+    // In production, we should log the original error to a monitoring service,
+    // but not expose details to the user.
     throw new Error(JSON.stringify(errorInfo));
   }
   throw error;

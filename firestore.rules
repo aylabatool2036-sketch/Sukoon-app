@@ -26,10 +26,14 @@ service cloud.firestore {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
-    // Fixed: use role field instead of hardcoded email
     function isAdmin() {
       return isAuthenticated() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Ensures fields are not modified during update
+    function isUnmodified(field) {
+      return !(field in request.resource.data) || request.resource.data[field] == resource.data[field];
     }
 
     // ===============================================================
@@ -98,10 +102,12 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) &&
+                      (!('role' in request.resource.data) || request.resource.data.role != 'admin');
       allow update: if isOwner(userId) && isValidUser(request.resource.data) &&
-                     request.resource.data.uid == resource.data.uid &&
-                     request.resource.data.createdAt == resource.data.createdAt;
+                     isUnmodified('uid') &&
+                     isUnmodified('createdAt') &&
+                     isUnmodified('role');
 
       match /chat/{msgId} {
         allow read: if isOwner(userId);
@@ -118,8 +124,8 @@ service cloud.firestore {
       allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
       allow create: if isAuthenticated() && isValidMood(request.resource.data);
       allow update: if isDocOwner() && isValidMood(request.resource.data) &&
-                     request.resource.data.uid == resource.data.uid &&
-                     request.resource.data.timestamp == resource.data.timestamp;
+                     isUnmodified('uid') &&
+                     isUnmodified('timestamp');
       allow delete: if isDocOwner();
     }
 
@@ -127,8 +133,8 @@ service cloud.firestore {
       allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
       allow create: if isAuthenticated() && isValidJournal(request.resource.data);
       allow update: if isDocOwner() && isValidJournal(request.resource.data) &&
-                     request.resource.data.uid == resource.data.uid &&
-                     request.resource.data.timestamp == resource.data.timestamp;
+                     isUnmodified('uid') &&
+                     isUnmodified('timestamp');
       allow delete: if isDocOwner();
     }
 
@@ -136,21 +142,25 @@ service cloud.firestore {
       allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
       allow create: if isAuthenticated() && isValidGoal(request.resource.data);
       allow update: if isDocOwner() && isValidGoal(request.resource.data) &&
-                     request.resource.data.uid == resource.data.uid &&
-                     request.resource.data.createdAt == resource.data.createdAt;
+                     isUnmodified('uid') &&
+                     isUnmodified('createdAt');
       allow delete: if isDocOwner();
     }
 
     match /memories/{memoryId} {
       allow read: if isDocOwner();
-      allow create, update: if isDocOwner() && isValidMemory(request.resource.data);
+      allow create: if isAuthenticated() && isValidMemory(request.resource.data);
+      allow update: if isDocOwner() && isValidMemory(request.resource.data) &&
+                     isUnmodified('uid');
       allow delete: if isDocOwner();
     }
 
     match /decisions/{sessionId} {
       allow read: if isDocOwner();
       allow create: if isAuthenticated() && isValidDecision(request.resource.data);
-      allow update: if isDocOwner() && isValidDecision(request.resource.data);
+      allow update: if isDocOwner() && isValidDecision(request.resource.data) &&
+                     isUnmodified('uid') &&
+                     isUnmodified('createdAt');
       allow delete: if isDocOwner();
     }
 
@@ -158,8 +168,8 @@ service cloud.firestore {
       allow read: if isDocOwner();
       allow create: if isAuthenticated() && isValidFutureMeMessage(request.resource.data);
       allow update: if isDocOwner() && isValidFutureMeMessage(request.resource.data) &&
-                     request.resource.data.uid == resource.data.uid &&
-                     request.resource.data.createdAt == resource.data.createdAt;
+                     isUnmodified('uid') &&
+                     isUnmodified('createdAt');
       allow delete: if isDocOwner();
     }
 
