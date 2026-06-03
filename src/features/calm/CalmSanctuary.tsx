@@ -150,7 +150,7 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
 const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], sukoonMode: boolean, lang: string, user: any }) => {
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
-  const [likedSet, setLikedSet] = useState<Set<string>>(new Set());
+  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
 
   const handlePost = async () => {
     if (!text.trim() || !user) return;
@@ -166,12 +166,12 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
 
   const handleLike = async (id: string, currentLikes: number) => {
     // One-way like only — no unlike
-    if (likedSet.has(id)) return;
-    setLikedSet(prev => new Set(prev).add(id));
+    
+    setLikedMap(prev => ({ ...prev, [id]: !prev[id] }));
     try {
-      await dbService.wall.like(id, currentLikes, true);
+      await dbService.wall.like(id, currentLikes, !likedMap[id]);
     } catch (e) {
-      setLikedSet(prev => { const s = new Set(prev); s.delete(id); return s; });
+      setLikedMap(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -203,7 +203,7 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {messages.map((m) => {
-          const hasLiked = likedSet.has(m.id!);
+          const hasLiked = likedMap[m.id!];
           return (
             <motion.div
               layout
@@ -247,7 +247,7 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
               <div className="flex justify-start">
                 <button 
                   onClick={() => handleLike(m.id!, m.likes || 0)}
-                  disabled={hasLiked}
+                  
                   className={cn(
                     "flex items-center gap-2 font-bold text-sm transition-colors px-4 py-2 rounded-full",
                     hasLiked 
