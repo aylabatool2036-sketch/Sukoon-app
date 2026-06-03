@@ -13,7 +13,7 @@ import {
   updateDoc,
   getDocs,
   deleteDoc,
-  Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
@@ -30,13 +30,6 @@ export interface FirestoreErrorInfo {
   error: string;
   operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write';
   path: string | null;
-  authInfo: {
-    userId: string;
-    email: string;
-    emailVerified: boolean;
-    isAnonymous: boolean;
-    providerInfo: { providerId: string; displayName: string; email: string }[];
-  };
 }
 
 const handleFirestoreError = (
@@ -46,21 +39,9 @@ const handleFirestoreError = (
 ): never => {
   if (error.code === 'permission-denied') {
     const errorInfo: FirestoreErrorInfo = {
-      error: error.message,
+      error: 'Access denied. You do not have permission to perform this action.',
       operationType,
       path,
-      authInfo: {
-        userId: auth.currentUser?.uid || 'anonymous',
-        email: auth.currentUser?.email || '',
-        emailVerified: auth.currentUser?.emailVerified || false,
-        isAnonymous: auth.currentUser?.isAnonymous || true,
-        providerInfo:
-          auth.currentUser?.providerData.map((p) => ({
-            providerId: p.providerId,
-            displayName: p.displayName || '',
-            email: p.email || '',
-          })) || [],
-      },
     };
     throw new Error(JSON.stringify(errorInfo));
   }
@@ -78,14 +59,50 @@ export const dbService = {
       const user = auth.currentUser;
       if (!user) return;
       
-      // 1. Delete user profile from Firestore
+      const uid = user.uid;
+
+      // Recursive deletion of all user-associated data
+      const collections = [
+        'moods',
+        'journal',
+        'goals',
+        'memories',
+        'decisions',
+        'futureMeMessages',
+        'wallOfHopeRateLimit'
+      ];
+
+      for (const colName of collections) {
+        try {
+          const q = query(collection(db, colName), where('uid', '==', uid));
+          const snap = await getDocs(q);
+          const batch = writeBatch(db);
+          snap.docs.forEach((d) => batch.delete(d.ref));
+          await batch.commit();
+        } catch (e) {
+          console.error(`Error deleting from ${colName}:`, e);
+        }
+      }
+
+      // Special case for subcollections /users/{uid}/chat
       try {
-        await deleteDoc(doc(db, 'users', user.uid));
+        const q = query(collection(db, 'users', uid, 'chat'));
+        const snap = await getDocs(q);
+        const batch = writeBatch(db);
+        snap.docs.forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      } catch (e) {
+        console.error("Error deleting chat history:", e);
+      }
+
+      // Delete user profile
+      try {
+        await deleteDoc(doc(db, 'users', uid));
       } catch (e) {
         console.error("Error deleting profile:", e);
       }
       
-      // 2. Delete the user from Firebase Auth
+      // Finally, delete the user from Firebase Auth
       await deleteUser(user);
     },
     getUserProfile: async (uid: string) => {
@@ -115,7 +132,7 @@ export const dbService = {
         return await addDoc(collection(db, 'moods'), {
           ...entry,
           timestamp: serverTimestamp(),
-          intensity: entry.intensity || 5, // Ensure intensity is present for rules
+          intensity: entry.intensity || 5,
         });
       } catch (e) {
         handleFirestoreError(e, 'create', 'moods');
@@ -177,7 +194,9 @@ export const dbService = {
     clearHistory: async (uid: string) => {
       const q = query(collection(db, 'users', uid, 'chat'));
       const snap = await getDocs(q);
-      await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+      const batch = writeBatch(db);
+      snap.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
     },
   },
 
@@ -213,7 +232,6 @@ export const dbService = {
   wall: {
     post: async (uid: string, text: string, lang: string) => {
       try {
-        // Rules require uid and specific fields
         const postRef = await addDoc(collection(db, 'wallOfHope'), {
           uid,
           text,
@@ -222,10 +240,10 @@ export const dbService = {
           createdAt: serverTimestamp(),
         });
         
-        // Update rate limit tracker
         await setDoc(doc(db, 'wallOfHopeRateLimit', uid), {
-          lastPostAt: serverTimestamp()
-        });
+          lastPostAt: serverTimestamp(),
+          uid // Explicit uid for deletion logic
+        }, { merge: true });
         
         return postRef;
       } catch (e) {
@@ -257,7 +275,6 @@ export const dbService = {
   futureMe: {
     save: async (msg: Omit<FutureMeMessage, 'id' | 'createdAt'>) => {
       try {
-        // Rules require tags.size() >= 1
         const tags = msg.tags && msg.tags.length > 0 ? msg.tags : ['Reflection'];
         return await addDoc(collection(db, 'futureMeMessages'), {
           ...msg,
