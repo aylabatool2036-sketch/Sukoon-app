@@ -15,7 +15,6 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
   const { lang, moods, journalEntries, sukoonMode, user, profile } = useAppStore();
   const [flowActive, setFlowActive] = useState(false);
   const [initialMood, setInitialMood] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<'all' | 'mood' | 'journal'>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [editingMood, setEditingMood] = useState<MoodEntry | null>(null);
   const [editNote, setEditNote] = useState('');
@@ -43,28 +42,18 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
     });
   }, [user]);
 
+  // Home only shows mood entries, not journal entries
   const timeline = useMemo(() => {
-    let items = [
-      ...moods.map(m => ({ ...m, type: 'mood' as const })),
-      ...journalEntries.map(j => ({ ...j, type: 'journal' as const }))
-    ];
-
-    if (filterType !== 'all') {
-      items = items.filter(item => item.type === filterType);
-    }
-
-    return items.sort((a, b) => {
+    return [...moods.map(m => ({ ...m, type: 'mood' as const }))].sort((a, b) => {
       const getT = (ts: any) => {
         if (ts instanceof Date) return ts.getTime();
         if (ts?.toDate) return ts.toDate().getTime();
         if (ts?.seconds) return ts.seconds * 1000;
         return 0;
       };
-      const tA = getT(a.timestamp);
-      const tB = getT(b.timestamp);
-      return sortOrder === 'desc' ? tB - tA : tA - tB;
+      return sortOrder === 'desc' ? getT(b.timestamp) - getT(a.timestamp) : getT(a.timestamp) - getT(b.timestamp);
     });
-  }, [moods, journalEntries, filterType, sortOrder]);
+  }, [moods, sortOrder]);
 
   const handleUpdateMood = async () => {
     if (!editingMood || !user) return;
@@ -85,13 +74,6 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
       default: return <Smile className="w-8 h-8" />;
     }
   };
-
-  const SparklesBackground = () => (
-    <div className="absolute inset-0 opacity-10 pointer-events-none">
-      <Sparkles className="absolute top-2 right-2 w-4 h-4" />
-      <Sparkles className="absolute bottom-4 left-4 w-3 h-3" />
-    </div>
-  );
 
   return (
     <div className="space-y-16 pb-20">
@@ -128,7 +110,6 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
                       sukoonMode ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-white border-gray-50 hover:border-primary-soft/20 text-gray-900"
                     )}
                   >
-                    <SparklesBackground />
                     <div className={cn(
                       "w-14 h-14 sm:w-20 sm:h-20 rounded-[22px] sm:rounded-[32px] flex items-center justify-center transition-all duration-500 shadow-inner z-10",
                       m === 'stressed' ? "bg-rose-50 text-rose-500" : 
@@ -144,25 +125,17 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
               </div>
             </div>
 
-            {/* Timeline Section */}
+            {/* Mood Timeline — no journal entries here */}
             {timeline.length > 0 && (
               <div className="space-y-10 pt-16 border-t border-gray-50">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 gap-4">
                    <div className="space-y-1">
-                      <h3 className={cn("text-2xl font-serif font-bold tracking-tight", sukoonMode ? "text-slate-100" : "text-gray-900")}>Your Journey</h3>
+                      <h3 className={cn("text-2xl font-serif font-bold tracking-tight", sukoonMode ? "text-slate-100" : "text-gray-900")}>Your Moods</h3>
                       <p className="text-gray-400 font-bold uppercase tracking-widest">{timeline.length} Entries</p>
                    </div>
-                   
-                   <div className="flex items-center gap-2">
-                      <div className={cn("flex rounded-full p-1", sukoonMode ? "bg-slate-900" : "bg-gray-50")}>
-                        <button onClick={() => setFilterType('all')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", filterType === 'all' ? (sukoonMode ? "bg-slate-800 text-slate-100 shadow-sm" : "bg-white text-gray-900 shadow-sm") : "text-gray-400")}>All</button>
-                        <button onClick={() => setFilterType('mood')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", filterType === 'mood' ? (sukoonMode ? "bg-slate-800 text-slate-100 shadow-sm" : "bg-white text-gray-900 shadow-sm") : "text-gray-400")}>Moods</button>
-                        <button onClick={() => setFilterType('journal')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", filterType === 'journal' ? (sukoonMode ? "bg-slate-800 text-slate-100 shadow-sm" : "bg-white text-gray-900 shadow-sm") : "text-gray-400")}>Journals</button>
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={() => setSortOrder(s => s === 'desc' ? 'asc' : 'desc')} className="text-gray-500 rounded-full w-9 h-9">
-                        {sortOrder === 'desc' ? <SortDesc className="w-4 h-4" /> : <SortAsc className="w-4 h-4" />}
-                      </Button>
-                   </div>
+                   <Button variant="ghost" size="icon" onClick={() => setSortOrder(s => s === 'desc' ? 'asc' : 'desc')} className="text-gray-500 rounded-full w-9 h-9">
+                     {sortOrder === 'desc' ? <SortDesc className="w-4 h-4" /> : <SortAsc className="w-4 h-4" />}
+                   </Button>
                 </div>
                 
                 <div className={cn(
@@ -178,57 +151,48 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
                     >
                       <div className={cn(
                         "absolute left-0 top-1 w-8 h-8 rounded-2xl flex items-center justify-center z-10 shadow-lg",
-                        item.type === 'mood' 
-                          ? (sukoonMode ? "bg-slate-800 text-primary-soft shadow-slate-950" : "bg-pastel-green text-primary-soft shadow-emerald-100") 
-                          : "bg-primary-soft text-white shadow-primary-100"
+                        sukoonMode ? "bg-slate-800 text-primary-soft shadow-slate-950" : "bg-pastel-green text-primary-soft shadow-emerald-100"
                       )}>
-                         {item.type === 'mood' ? <Smile className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                        <Smile className="w-4 h-4" />
                       </div>
                       <div className="space-y-2">
-		                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] pl-1 opacity-70">
-		                           {format(
-		                             item.timestamp instanceof Date 
-		                               ? item.timestamp 
-		                               : (item.timestamp as any)?.toDate 
-		                                 ? (item.timestamp as any).toDate() 
-		                                 : (item.timestamp as any)?.seconds 
-		                                   ? new Date((item.timestamp as any).seconds * 1000) 
-		                                   : new Date(), 
-		                             'HH:mm • MMM d'
-		                           )}
-		                         </p>
-	                         <Card 
-	                            onClick={item.type === 'mood' ? () => { setEditingMood(item as MoodEntry); setEditNote((item as MoodEntry).note || ""); } : undefined}
-	                            className={cn(
-                                "p-6 border-0 shadow-sm hover:shadow-xl transition-all duration-500 group", 
-                                sukoonMode ? "bg-slate-900/50" : "bg-white",
-                                item.type === 'mood' && "cursor-pointer hover:-translate-y-0.5"
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] pl-1 opacity-70">
+                          {format(
+                            item.timestamp instanceof Date 
+                              ? item.timestamp 
+                              : (item.timestamp as any)?.toDate 
+                                ? (item.timestamp as any).toDate() 
+                                : (item.timestamp as any)?.seconds 
+                                  ? new Date((item.timestamp as any).seconds * 1000) 
+                                  : new Date(), 
+                            'HH:mm • MMM d'
+                          )}
+                        </p>
+                        <Card 
+                          onClick={() => { setEditingMood(item as MoodEntry); setEditNote((item as MoodEntry).note || ""); }}
+                          className={cn(
+                            "p-6 border-0 shadow-sm hover:shadow-xl transition-all duration-500 group cursor-pointer hover:-translate-y-0.5", 
+                            sukoonMode ? "bg-slate-900/50" : "bg-white"
+                          )}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="flex-1">
+                              <span className={cn("text-lg font-bold tracking-tight block", sukoonMode ? "text-slate-100" : "text-gray-800")}>
+                                Feeling {(item as MoodEntry).mood}
+                              </span>
+                              {(item as MoodEntry).note && (
+                                <p className="text-sm text-gray-500 mt-1 italic">"{(item as MoodEntry).note}"</p>
                               )}
-	                         >
-	                            {item.type === 'mood' ? (
-	                               <div className="flex items-center gap-4">
-	                                 <div className="text-3xl">{(item as MoodEntry).mood === 'happy' ? '✨' : (item as MoodEntry).mood === 'sad' ? '💧' : '🌱'}</div>
-	                                 <div className="flex-1">
-	                                    <span className={cn("text-lg font-bold tracking-tight block", sukoonMode ? "text-slate-100" : "text-gray-800")}>Feeling {(item as MoodEntry).mood}</span>
-	                                    {(item as MoodEntry).note && <p className="text-sm text-gray-500 mt-1 italic">"{(item as MoodEntry).note}"</p>}
-	                                    <p className="text-[10px] text-gray-300 font-semibold uppercase tracking-wider mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to edit details</p>
-	                                 </div>
-	                               </div>
-	                            ) : (
-	                               <div className="space-y-3">
-	                                  <p className={cn("text-base line-clamp-3 leading-relaxed", sukoonMode ? "text-slate-300" : "text-gray-600")}>{(item as JournalEntry).content}</p>
-	                                  <div className="flex gap-2">
-	                                     {((item as JournalEntry).tags || ['Personal', 'Reflection']).map(tag => (
-	                                       <span key={tag} className={cn("text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest", sukoonMode ? "bg-slate-800 text-slate-500" : "bg-gray-50 text-gray-400")}>#{tag}</span>
-	                                     ))}
-	                                  </div>
-	                               </div>
-	                            )}
-	                         </Card>
-	                      </div>
-	                    </motion.div>
-	                  ))}
-	                </div>
+                              <p className="text-[10px] text-gray-300 font-semibold uppercase tracking-wider mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Click to edit note
+                              </p>
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             )}
           </motion.div>
@@ -242,7 +206,7 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
             }}
             onSaveMood={handleSaveMoodDirectly}
             onJournal={() => { setView('journal'); setFlowActive(false); }}
-            onFutureMe={() => { setView('calm'); setFlowActive(false); }} // Note: FutureMe is a tab in Calm
+            onFutureMe={() => { setView('calm'); setFlowActive(false); }}
             onChat={() => { setView('chat'); setFlowActive(false); }}
           />
         )}
