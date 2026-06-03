@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Wind, CloudMoon, Waves, Cloud as CloudIcon, CloudRain, Zap, Heart, User as UserIcon, Loader2, Sparkles, MessageCircle, Play, Square, RefreshCw, Anchor } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
@@ -70,8 +70,17 @@ const EnhancedBackground = ({ sukoonMode, theme }: { sukoonMode: boolean, theme:
   );
 };
 
+// Soundscape URLs — free loopable audio from freesound/pixabay CDN
+const SOUND_URLS: Record<string, string> = {
+  waves: 'https://cdn.pixabay.com/audio/2022/03/09/audio_c51e7f87ad.mp3',
+  rain: 'https://cdn.pixabay.com/audio/2022/05/13/audio_7b738dc55e.mp3',
+  wind: 'https://cdn.pixabay.com/audio/2022/03/15/audio_942571cd52.mp3',
+  birds: 'https://cdn.pixabay.com/audio/2022/03/10/audio_1e97e19b54.mp3',
+};
+
 const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
   const [playing, setPlaying] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const sounds = [
     { id: 'waves', name: 'Ocean Waves', icon: Waves, color: 'text-blue-500' },
@@ -79,6 +88,34 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
     { id: 'wind', name: 'Mountain Wind', icon: Wind, color: 'text-slate-400' },
     { id: 'birds', name: 'Deep Forest', icon: CloudIcon, color: 'text-emerald-500' },
   ];
+
+  const toggle = (id: string) => {
+    if (playing === id) {
+      // Stop
+      audioRef.current?.pause();
+      if (audioRef.current) audioRef.current.currentTime = 0;
+      audioRef.current = null;
+      setPlaying(null);
+    } else {
+      // Stop previous
+      audioRef.current?.pause();
+      if (audioRef.current) audioRef.current.currentTime = 0;
+      // Play new
+      const audio = new Audio(SOUND_URLS[id]);
+      audio.loop = true;
+      audio.volume = 0.6;
+      audio.play().catch(() => {});
+      audioRef.current = audio;
+      setPlaying(id);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, []);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -91,7 +128,7 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
               ? (sukoonMode ? "bg-primary-strong/20 ring-2 ring-primary-soft/50" : "bg-primary-soft/10 ring-2 ring-primary-soft/20")
               : (sukoonMode ? "bg-slate-900 hover:bg-slate-800" : "bg-white hover:bg-gray-50")
           )}
-          onClick={() => setPlaying(playing === s.id ? null : s.id)}
+          onClick={() => toggle(s.id)}
         >
           <div className="flex flex-col items-center gap-4">
             <div className={cn("p-4 rounded-2xl transition-colors", playing === s.id ? "bg-white dark:bg-slate-800" : "bg-gray-50 dark:bg-slate-800")}>
@@ -100,6 +137,9 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
             <span className={cn("text-xs font-bold uppercase tracking-widest", playing === s.id ? "text-primary-strong dark:text-primary-soft" : "text-gray-400")}>
               {s.name}
             </span>
+            {playing === s.id && (
+              <span className="text-[10px] text-primary-strong font-bold uppercase tracking-widest animate-pulse">Playing</span>
+            )}
           </div>
         </Card>
       ))}
@@ -110,7 +150,7 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
 const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], sukoonMode: boolean, lang: string, user: any }) => {
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
-  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+  const [likedSet, setLikedSet] = useState<Set<string>>(new Set());
 
   const handlePost = async () => {
     if (!text.trim() || !user) return;
@@ -125,12 +165,13 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
   };
 
   const handleLike = async (id: string, currentLikes: number) => {
-    if (likedMap[id]) return;
-    setLikedMap(prev => ({ ...prev, [id]: true }));
+    // One-way like only — no unlike
+    if (likedSet.has(id)) return;
+    setLikedSet(prev => new Set(prev).add(id));
     try {
       await dbService.wall.like(id, currentLikes, true);
     } catch (e) {
-      setLikedMap(prev => ({ ...prev, [id]: false }));
+      setLikedSet(prev => { const s = new Set(prev); s.delete(id); return s; });
     }
   };
 
@@ -162,7 +203,7 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {messages.map((m) => {
-          const hasLiked = likedMap[m.id!];
+          const hasLiked = likedSet.has(m.id!);
           return (
             <motion.div
               layout
@@ -185,18 +226,18 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
                       {m.authorLang}
                     </span>
                     <span className="w-1 h-1 rounded-full bg-gray-200" />
-	                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">
-	                      {format(
-	                        m.createdAt instanceof Date 
-	                          ? m.createdAt 
-	                          : (m.createdAt as any)?.toDate 
-	                            ? (m.createdAt as any).toDate() 
-	                            : (m.createdAt as any)?.seconds 
-	                              ? new Date((m.createdAt as any).seconds * 1000) 
-	                              : new Date(), 
-	                        'MMM d'
-	                      )}
-	                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">
+                      {format(
+                        m.createdAt instanceof Date 
+                          ? m.createdAt 
+                          : (m.createdAt as any)?.toDate 
+                            ? (m.createdAt as any).toDate() 
+                            : (m.createdAt as any)?.seconds 
+                              ? new Date((m.createdAt as any).seconds * 1000) 
+                              : new Date(), 
+                        'MMM d'
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -204,16 +245,19 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
                 "{m.text}"
               </p>
               <div className="flex justify-start">
-	                 <button 
-	                  onClick={() => handleLike(m.id!, m.likes || 0)}
-	                  className={cn(
-	                    "flex items-center gap-2 group/btn font-bold text-sm text-gray-400 transition-colors px-4 py-2 rounded-full cursor-pointer",
-	                    hasLiked ? "bg-red-50/50 dark:bg-red-900/10 text-red-500" : "hover:text-red-500 bg-gray-50 dark:bg-slate-800"
-	                  )}
-	                 >
-                   <Heart className={cn("w-4 h-4 transition-transform", hasLiked ? "text-red-500 fill-current" : "group-active/btn:scale-125", (m.likes > 0 && !hasLiked) && "text-red-400")} />
-                   <span className={cn(hasLiked && "text-red-500")}>{m.likes || 0}</span>
-                 </button>
+                <button 
+                  onClick={() => handleLike(m.id!, m.likes || 0)}
+                  disabled={hasLiked}
+                  className={cn(
+                    "flex items-center gap-2 font-bold text-sm transition-colors px-4 py-2 rounded-full",
+                    hasLiked 
+                      ? "bg-red-50/50 dark:bg-red-900/10 text-red-500 cursor-default" 
+                      : "text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-slate-800 cursor-pointer"
+                  )}
+                >
+                  <Heart className={cn("w-4 h-4", hasLiked ? "text-red-500 fill-current" : "")} />
+                  <span>{m.likes || 0}</span>
+                </button>
               </div>
             </motion.div>
           );
