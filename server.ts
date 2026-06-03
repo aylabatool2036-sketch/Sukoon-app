@@ -19,8 +19,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-// Security Middleware
-app.use(helmet());
+// Security Middleware with custom CSP for Firebase
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "connect-src": ["'self'", "*.googleapis.com", "*.firebaseio.com", "https://sukoon-3al3.onrender.com"],
+      "img-src": ["'self'", "data:", "*.googleapis.com", "*.firebasestorage.app"],
+      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-inline/eval needed for some vite/firebase features
+    },
+  },
+}));
+
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
   methods: ['GET', 'POST'],
