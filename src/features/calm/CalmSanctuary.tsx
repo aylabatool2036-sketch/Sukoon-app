@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wind, CloudMoon, Waves, Cloud as CloudIcon, CloudRain, Zap, Heart, User as UserIcon, Loader2, Sparkles, MessageCircle, Play, Square, RefreshCw } from 'lucide-react';
+import { Wind, CloudMoon, Waves, Cloud as CloudIcon, CloudRain, Zap, Heart, User as UserIcon, Loader2, Sparkles, MessageCircle, Play, Square, RefreshCw, Anchor } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
@@ -18,108 +18,88 @@ const THEMES = {
     o1: 'bg-cyan-300/30', 
     o2: 'bg-indigo-400/20', 
     o3: 'bg-emerald-500/20', 
-    d: { d1: 30, d2: 35, d3: 40 },
-    name: 'Serene Ocean'
+    o4: 'bg-blue-600/10'
   },
   forest: { 
-    o1: 'bg-emerald-200/40', 
-    o2: 'bg-yellow-200/20', 
-    o3: 'bg-teal-600/15', 
-    d: { d1: 45, d2: 50, d3: 55 },
-    name: 'Morning Forest'
-  },
-  nebula: { 
-    o1: 'bg-fuchsia-500/20', 
-    o2: 'bg-violet-400/15', 
-    o3: 'bg-indigo-700/20', 
-    d: { d1: 20, d2: 25, d3: 30 },
-    name: 'Deep Space'
+    o1: 'bg-emerald-300/30',
+    o2: 'bg-teal-400/20',
+    o3: 'bg-lime-500/20',
+    o4: 'bg-green-600/10'
   },
   sunset: {
     o1: 'bg-orange-300/30',
     o2: 'bg-rose-400/20',
-    o3: 'bg-amber-500/15',
-    d: { d1: 35, d2: 40, d3: 45 },
-    name: 'Golden Hour'
+    o3: 'bg-amber-500/20',
+    o4: 'bg-pink-600/10'
   }
 };
 
 const EnhancedBackground = ({ sukoonMode, theme }: { sukoonMode: boolean, theme: keyof typeof THEMES }) => {
-  const t = THEMES[theme];
+  const current = THEMES[theme];
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none">
+    <div className={cn("fixed inset-0 -z-10 transition-colors duration-1000", sukoonMode ? "bg-slate-950" : "bg-slate-50")}>
       <motion.div 
-        animate={{ x: [0, 150, -50, 0], y: [0, 80, 120, 0], scale: [1, 1.4, 0.8, 1] }}
-        transition={{ duration: t.d.d1, repeat: Infinity, ease: "easeInOut" }}
-        className={cn("absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full blur-[150px] transition-colors duration-1000", sukoonMode ? "bg-slate-900/50" : t.o1)}
+        animate={{
+          scale: [1, 1.2, 1],
+          x: [0, 100, 0],
+          y: [0, 50, 0]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        className={cn("absolute -top-1/4 -left-1/4 w-[800px] h-[800px] rounded-full blur-[120px] mix-blend-multiply opacity-50", current.o1)}
       />
       <motion.div 
-        animate={{ x: [0, -180, 80, 0], y: [0, 100, -60, 0], scale: [1, 1.5, 1.2, 1] }}
-        transition={{ duration: t.d.d2, repeat: Infinity, delay: 5, ease: "easeInOut" }}
-        className={cn("absolute top-[20%] -right-[15%] w-[65%] h-[65%] rounded-full blur-[130px] transition-colors duration-1000", sukoonMode ? "bg-slate-800/80" : t.o2)}
+        animate={{
+          scale: [1.2, 1, 1.2],
+          x: [0, -120, 0],
+          y: [0, -80, 0]
+        }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className={cn("absolute top-1/4 -right-1/4 w-[700px] h-[700px] rounded-full blur-[100px] mix-blend-multiply opacity-40", current.o2)}
       />
       <motion.div 
-        animate={{ x: [0, 120, -150, 0], y: [0, -150, 70, 0], scale: [1, 1.2, 1.4, 1] }}
-        transition={{ duration: t.d.d3, repeat: Infinity, delay: 10, ease: "easeInOut" }}
-        className={cn("absolute -bottom-[20%] left-[20%] w-[60%] h-[60%] rounded-full blur-[140px] transition-colors duration-1000", sukoonMode ? "bg-purple-900/40" : t.o3)}
+        animate={{
+          scale: [1, 1.3, 1],
+          x: [100, 0, 100],
+          y: [-50, 0, -50]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className={cn("absolute -bottom-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[110px] mix-blend-multiply opacity-40", current.o3)}
       />
+      <div className={cn("absolute inset-0 opacity-10", sukoonMode ? "bg-[radial-gradient(#ffffff_1px,transparent_1px)]" : "bg-[radial-gradient(#000000_1px,transparent_1px)]")} style={{ backgroundSize: '40px 40px' }} />
     </div>
   );
 };
 
 const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const tracks = [
-    { id: 'white', title: "Zen Static", yt: "nMfPqeZjc2c", icon: <CloudIcon className="w-6 h-6" /> },
-    { id: 'rain', title: "Twilight Rain", yt: "mPZkdNFkNps", icon: <CloudRain className="w-6 h-6" /> },
-    { id: 'ocean', title: "Ebb & Flow", yt: "f77SKdyn-1Y", icon: <Waves className="w-6 h-6" /> },
-    { id: 'birds', title: "Secret Forest", yt: "eKFTSSKCzWA", icon: <Wind className="w-6 h-6" /> }
+  const [playing, setPlaying] = useState<string | null>(null);
+
+  const sounds = [
+    { id: 'waves', name: 'Ocean Waves', icon: Waves, color: 'text-blue-500' },
+    { id: 'rain', name: 'Soft Rain', icon: CloudRain, color: 'text-indigo-400' },
+    { id: 'wind', name: 'Mountain Wind', icon: Wind, color: 'text-slate-400' },
+    { id: 'birds', name: 'Deep Forest', icon: CloudIcon, color: 'text-emerald-500' },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {tracks.map(track => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {sounds.map(s => (
         <Card 
-          key={track.id}
+          key={s.id}
           className={cn(
-            "group overflow-hidden transition-all duration-500 relative",
-            playingId === track.id ? "ring-2 ring-primary-soft shadow-2xl scale-[1.02]" : "hover:shadow-xl hover:-translate-y-1",
-            sukoonMode && "bg-slate-900 border-slate-800"
+            "p-8 border-0 shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95 group",
+            playing === s.id
+              ? (sukoonMode ? "bg-primary-strong/20 ring-2 ring-primary-soft/50" : "bg-primary-soft/10 ring-2 ring-primary-soft/20")
+              : (sukoonMode ? "bg-slate-900 hover:bg-slate-800" : "bg-white hover:bg-gray-50")
           )}
+          onClick={() => setPlaying(playing === s.id ? null : s.id)}
         >
-          <div className="p-8 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "w-14 h-14 rounded-2xl flex items-center justify-center transition-all",
-                  playingId === track.id ? "bg-primary-strong text-white" : "bg-primary-soft/5 text-primary-soft shadow-inner"
-                )}>
-                  {track.icon}
-                </div>
-                <h3 className="font-bold text-xl tracking-tight">{track.title}</h3>
-              </div>
-              <Button
-                variant={playingId === track.id ? 'primary' : 'secondary'}
-                size="icon"
-                onClick={() => setPlayingId(playingId === track.id ? null : track.id)}
-                className="rounded-full w-12 h-12"
-              >
-                {playingId === track.id ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-1" />}
-              </Button>
+          <div className="flex flex-col items-center gap-4">
+            <div className={cn("p-4 rounded-2xl transition-colors", playing === s.id ? "bg-white dark:bg-slate-800" : "bg-gray-50 dark:bg-slate-800")}>
+              <s.icon className={cn("w-8 h-8", playing === s.id ? s.color : "text-gray-300")} />
             </div>
-
-            <div className={cn(
-              "aspect-video rounded-3xl bg-black overflow-hidden transition-all duration-700",
-              playingId === track.id ? "opacity-100 max-h-[300px]" : "opacity-0 max-h-0"
-            )}>
-              {playingId === track.id && (
-                <iframe 
-                   src={`https://www.youtube.com/embed/${track.yt}?autoplay=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${track.yt}`}
-                   className="w-full h-full opacity-60"
-                   allow="autoplay"
-                />
-              )}
-            </div>
+            <span className={cn("text-xs font-bold uppercase tracking-widest", playing === s.id ? "text-primary-strong dark:text-primary-soft" : "text-gray-400")}>
+              {s.name}
+            </span>
           </div>
         </Card>
       ))}
@@ -127,111 +107,86 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
   );
 };
 
-const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], sukoonMode: boolean, lang: any, user: any }) => {
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [likedMessageIds, setLikedMessageIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem('sukoon_liked_messages');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], sukoonMode: boolean, lang: string, user: any }) => {
+  const [text, setText] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
 
   const handlePost = async () => {
-    if (!input.trim() || loading || !user) return;
-    setLoading(true);
+    if (!text.trim() || !user) return;
+    setPosting(true);
     try {
-      await dbService.wall.post(user.uid, input.trim(), lang);
-      setInput('');
+      await dbService.wall.post(user.uid, text, lang);
+      setText('');
     } catch (e: any) {
-      alert("Error posting: " + e.message);
+      alert("Error: " + e.message);
     }
-    setLoading(false);
+    setPosting(false);
   };
 
   const handleLike = async (id: string, currentLikes: number) => {
-    const hasLiked = likedMessageIds.has(id);
-    
-    // Update local state optimistically
-    setLikedMessageIds(prev => {
-      const newSet = new Set(prev);
-      if (hasLiked) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      localStorage.setItem('sukoon_liked_messages', JSON.stringify(Array.from(newSet)));
-      return newSet;
-    });
-    
-    // Update database with the new like count
+    if (likedMap[id]) return;
+    setLikedMap(prev => ({ ...prev, [id]: true }));
     try {
-      await dbService.wall.like(id, currentLikes || 0, !hasLiked);
-    } catch (error) {
-      console.error('Error updating like:', error);
-      // Revert optimistic update on error
-      setLikedMessageIds(prev => {
-        const newSet = new Set(prev);
-        if (hasLiked) {
-          newSet.add(id);
-        } else {
-          newSet.delete(id);
-        }
-        localStorage.setItem('sukoon_liked_messages', JSON.stringify(Array.from(newSet)));
-        return newSet;
-      });
+      await dbService.wall.like(id, currentLikes, true);
+    } catch (e) {
+      setLikedMap(prev => ({ ...prev, [id]: false }));
     }
   };
 
   return (
-    <div className="space-y-10 max-w-4xl mx-auto">
-      <Card className={cn("p-10 border-0 shadow-2xl shadow-primary-soft/10 overflow-hidden relative", sukoonMode ? "bg-slate-900" : "bg-white")}>
-        {!sukoonMode && <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-primary-soft to-indigo-400" />}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-2xl font-serif font-bold">The Wall of Hope</h3>
-            <p className="text-gray-400 text-sm italic">"Your words might be exactly what someone else needs to hear today."</p>
+    <div className="space-y-12">
+      <Card className={cn("p-8 border-0 shadow-lg", sukoonMode ? "bg-slate-900" : "bg-white")}>
+        <div className="flex gap-6 items-start">
+          <div className="w-12 h-12 rounded-full bg-primary-soft/10 flex items-center justify-center shrink-0">
+            <Heart className="w-6 h-6 text-primary-strong" />
           </div>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Share a thought, a hope, or a tiny win..."
-            className={cn(
-              "w-full rounded-[24px] p-6 text-lg border-0 focus:ring-4 transition-all min-h-[140px]",
-              sukoonMode ? "bg-slate-800 text-slate-200 focus:ring-slate-700" : "bg-gray-50 focus:ring-primary-soft/10 placeholder:text-gray-300"
-            )}
-          />
-          <Button onClick={handlePost} disabled={!input.trim() || loading} className="w-full h-14 rounded-2xl text-base shadow-lg shadow-primary-soft/10">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Anonymously Share Hope"}
-          </Button>
+          <div className="flex-1 space-y-4">
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="Leave a message of hope for someone else..."
+              className={cn(
+                "w-full min-h-[120px] p-4 text-lg font-serif border-0 rounded-2xl outline-none resize-none",
+                sukoonMode ? "bg-slate-800 text-slate-100" : "bg-gray-50 text-gray-900"
+              )}
+            />
+            <div className="flex justify-end">
+              <Button onClick={handlePost} disabled={!text.trim() || posting} className="rounded-full px-8">
+                {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Hope"}
+              </Button>
+            </div>
+          </div>
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mx-auto overflow-y-auto max-h-[60vh] pr-2 scrollbar-thin">
-        {messages.map((m, i) => {
-          const hasLiked = likedMessageIds.has(m.id!);
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {messages.map((m) => {
+          const hasLiked = likedMap[m.id!];
           return (
             <motion.div
-              key={m.id || i}
+              layout
+              key={m.id}
               initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className={cn(
-                "p-8 rounded-[40px] border shadow-sm transition-all relative overflow-hidden group",
-                sukoonMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-100 hover:shadow-2xl"
-              )}
+              animate={{ opacity: 1, scale: 1 }}
+              className={cn("p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 transition-all", sukoonMode ? "bg-slate-900" : "bg-white")}
             >
-              <div className="flex items-center gap-4 mb-6">
-                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", sukoonMode ? "bg-slate-800" : "bg-primary-soft/10")}>
-                  <UserIcon className={cn("w-5 h-5", sukoonMode ? "text-slate-500" : "text-primary-soft")} />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-full bg-primary-soft/10 flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-primary-strong" />
                 </div>
-                <div className="flex-1">
-                  <p className={cn("font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>Kind Stranger</p>
+                <div>
                   <div className="flex items-center gap-2">
-	                    <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">
-	                      {m.authorLang} • {format(
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                      Anonymous
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-gray-200" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary-strong/60">
+                      {m.authorLang}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-gray-200" />
+	                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">
+	                      {format(
 	                        m.createdAt instanceof Date 
 	                          ? m.createdAt 
 	                          : (m.createdAt as any)?.toDate 
@@ -269,9 +224,26 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
 };
 
 const DistractTasks = ({ sukoonMode }: { sukoonMode: boolean }) => {
-  const [task, setTask] = useState<'rhythm' | 'facts' | 'none'>('none');
+  const [task, setTask] = useState<'rhythm' | 'facts' | 'breathing' | 'none'>('none');
   const [count, setCount] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
+  const [breathState, setBreathState] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+
+  useEffect(() => {
+    if (task !== 'breathing') return;
+
+    const sequence = async () => {
+      setBreathState('inhale');
+      await new Promise(r => setTimeout(r, 4000));
+      setBreathState('hold');
+      await new Promise(r => setTimeout(r, 4000));
+      setBreathState('exhale');
+      await new Promise(r => setTimeout(r, 4000));
+      sequence();
+    };
+
+    sequence();
+  }, [task]);
   
   const facts = [
     "A day on Venus is longer than its year.",
@@ -293,17 +265,24 @@ const DistractTasks = ({ sukoonMode }: { sukoonMode: boolean }) => {
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap">
+        <Button
+          variant={task === 'breathing' ? 'primary' : 'secondary'}
+          className="flex-1 h-16 rounded-2xl gap-2 min-w-[140px]"
+          onClick={() => setTask('breathing')}
+        >
+          <Wind className="w-5 h-5" /> Breathing
+        </Button>
         <Button 
           variant={task === 'rhythm' ? 'primary' : 'secondary'} 
-          className="flex-1 h-16 rounded-2xl gap-2"
+          className="flex-1 h-16 rounded-2xl gap-2 min-w-[140px]"
           onClick={() => setTask('rhythm')}
         >
           <Zap className="w-5 h-5" /> Rhythm Tap
         </Button>
         <Button 
           variant={task === 'facts' ? 'primary' : 'secondary'} 
-          className="flex-1 h-16 rounded-2xl gap-2"
+          className="flex-1 h-16 rounded-2xl gap-2 min-w-[140px]"
           onClick={() => setTask('facts')}
         >
           <RefreshCw className="w-5 h-5" /> Random Facts
@@ -311,6 +290,38 @@ const DistractTasks = ({ sukoonMode }: { sukoonMode: boolean }) => {
       </div>
 
       <AnimatePresence mode="wait">
+        {task === 'breathing' && (
+          <motion.div
+            key="breathing"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="text-center space-y-8"
+          >
+            <Card className={cn("p-12 min-h-[400px] flex flex-col items-center justify-center overflow-hidden relative", sukoonMode ? "bg-slate-900" : "bg-white")}>
+              <motion.div
+                animate={{
+                  scale: breathState === 'inhale' ? 1.5 : breathState === 'hold' ? 1.5 : 0.8,
+                  opacity: breathState === 'hold' ? 0.8 : 1
+                }}
+                transition={{ duration: 4, ease: "easeInOut" }}
+                className="w-48 h-48 rounded-full bg-primary-soft/20 flex items-center justify-center relative"
+              >
+                <div className="w-32 h-32 rounded-full bg-primary-soft/30 animate-pulse" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xl font-bold uppercase tracking-widest text-primary-strong">
+                    {breathState === 'inhale' ? 'Inhale' : breathState === 'hold' ? 'Hold' : 'Exhale'}
+                  </span>
+                </div>
+              </motion.div>
+              <p className="mt-12 text-gray-400 font-medium max-w-xs">
+                Follow the circle. Breathe in through your nose, hold, then slowly out through your mouth.
+              </p>
+            </Card>
+            <Button variant="ghost" onClick={() => setTask('none')}>Done</Button>
+          </motion.div>
+        )}
+
         {task === 'rhythm' && (
           <motion.div 
             key="rhythm"
