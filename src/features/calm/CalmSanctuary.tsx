@@ -227,12 +227,12 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
   useEffect(() => () => stopCurrent(), []);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 gap-3 sm:gap-6">
       {sounds.map(s => (
         <Card
           key={s.id}
           className={cn(
-            "p-8 border-0 shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95",
+            "p-4 sm:p-8 border-0 shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95",
             playing === s.id
               ? (sukoonMode ? "bg-primary-strong/20 ring-2 ring-primary-soft/50" : "bg-primary-soft/10 ring-2 ring-primary-soft/20")
               : (sukoonMode ? "bg-slate-900 hover:bg-slate-800" : "bg-white hover:bg-gray-50")
@@ -382,32 +382,32 @@ const DistractTasks = ({ sukoonMode }: { sukoonMode: boolean }) => {
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
-      <div className="flex gap-4 flex-wrap">
-        <Button variant={task === 'breathing' ? 'primary' : 'secondary'} className="flex-1 h-16 rounded-2xl gap-2 min-w-[140px]" onClick={() => setTask('breathing')}>
-          <Wind className="w-5 h-5" /> Breathing
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <Button variant={task === 'breathing' ? 'primary' : 'secondary'} className="h-14 sm:h-16 rounded-2xl gap-1 sm:gap-2 text-xs sm:text-sm px-2" onClick={() => setTask('breathing')}>
+          <Wind className="w-4 h-4 flex-shrink-0" /><span className="truncate">Breathe</span>
         </Button>
-        <Button variant={task === 'rhythm' ? 'primary' : 'secondary'} className="flex-1 h-16 rounded-2xl gap-2 min-w-[140px]" onClick={() => setTask('rhythm')}>
-          <Zap className="w-5 h-5" /> Rhythm Tap
+        <Button variant={task === 'rhythm' ? 'primary' : 'secondary'} className="h-14 sm:h-16 rounded-2xl gap-1 sm:gap-2 text-xs sm:text-sm px-2" onClick={() => setTask('rhythm')}>
+          <Zap className="w-4 h-4 flex-shrink-0" /><span className="truncate">Rhythm</span>
         </Button>
-        <Button variant={task === 'facts' ? 'primary' : 'secondary'} className="flex-1 h-16 rounded-2xl gap-2 min-w-[140px]" onClick={() => setTask('facts')}>
-          <RefreshCw className="w-5 h-5" /> Random Facts
+        <Button variant={task === 'facts' ? 'primary' : 'secondary'} className="h-14 sm:h-16 rounded-2xl gap-1 sm:gap-2 text-xs sm:text-sm px-2" onClick={() => setTask('facts')}>
+          <RefreshCw className="w-4 h-4 flex-shrink-0" /><span className="truncate">Facts</span>
         </Button>
       </div>
 
       <AnimatePresence mode="wait">
         {task === 'breathing' && (
           <motion.div key="breathing" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="text-center space-y-8">
-            <Card className={cn("p-12 min-h-[400px] flex flex-col items-center justify-center", sukoonMode ? "bg-slate-900" : "bg-white")}>
-              <motion.div animate={{ scale: breathState === 'inhale' ? 1.5 : breathState === 'hold' ? 1.5 : 0.8, opacity: breathState === 'hold' ? 0.8 : 1 }}
-                transition={{ duration: 4, ease: "easeInOut" }} className="w-48 h-48 rounded-full bg-primary-soft/20 flex items-center justify-center relative">
-                <div className="w-32 h-32 rounded-full bg-primary-soft/30 animate-pulse" />
+            <Card className={cn("p-6 sm:p-12 min-h-[300px] sm:min-h-[400px] flex flex-col items-center justify-center", sukoonMode ? "bg-slate-900" : "bg-white")}>
+              <motion.div animate={{ scale: breathState === 'inhale' ? 1.4 : breathState === 'hold' ? 1.4 : 0.7, opacity: breathState === 'hold' ? 0.8 : 1 }}
+                transition={{ duration: 4, ease: "easeInOut" }} className="w-36 h-36 sm:w-48 sm:h-48 rounded-full bg-primary-soft/20 flex items-center justify-center relative">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary-soft/30 animate-pulse" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold uppercase tracking-widest text-primary-strong">
+                  <span className="text-base sm:text-xl font-bold uppercase tracking-widest text-primary-strong">
                     {breathState === 'inhale' ? 'Inhale' : breathState === 'hold' ? 'Hold' : 'Exhale'}
                   </span>
                 </div>
               </motion.div>
-              <p className="mt-12 text-gray-400 font-medium max-w-xs">Follow the circle. Breathe in through your nose, hold, then slowly out.</p>
+              <p className="mt-8 sm:mt-12 text-gray-400 font-medium max-w-xs text-sm text-center">Follow the circle. Breathe in through your nose, hold, then slowly out.</p>
             </Card>
             <Button variant="ghost" onClick={() => setTask('none')}>Done</Button>
           </motion.div>
@@ -418,8 +418,8 @@ const DistractTasks = ({ sukoonMode }: { sukoonMode: boolean }) => {
               <div className="space-y-6">
                 <h3 className="text-4xl font-bold">{count}</h3>
                 <p className="text-gray-400">Tap to the rhythm of your heartbeat</p>
-                <button onClick={() => setCount(c => c + 1)} className="w-32 h-32 rounded-full bg-primary-soft/10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all mx-auto">
-                  <Heart className="w-12 h-12 text-primary-strong fill-current" />
+                <button onClick={() => setCount(c => c + 1)} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary-soft/10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all mx-auto">
+                  <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-primary-strong fill-current" />
                 </button>
               </div>
             </Card>
