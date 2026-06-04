@@ -88,17 +88,19 @@ app.use(helmet({
 app.use(express.json({ limit: "10kb" }));
 
 // 3. Groq API Setup with Stability Logic
-const groqApiKey = process.env.GROQ_API_KEY;
+const getGroqClient = () => {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.warn("⚠️ GROQ_API_KEY is missing in environment variables.");
+    return null;
+  }
+  return new Groq({ apiKey });
+};
+
 const chatModel = process.env.GROQ_CHAT_MODEL || "llama-3.3-70b-versatile";
 const reassuranceModel = process.env.GROQ_REASSURANCE_MODEL || "llama-3.3-70b-versatile";
 
-if (!groqApiKey) {
-  console.error("FATAL: GROQ_API_KEY is missing in environment variables.");
-}
-
-const groq = new Groq({ 
-  apiKey: groqApiKey || "dummy-key", // Prevent crash on init, handle in routes
-});
+let groq = getGroqClient();
 
 // Helper for Groq calls with retry and timeout
 async function callGroqWithRetry(fn: () => Promise<any>, retries = 2) {
@@ -181,7 +183,8 @@ app.get("/health", (req, res) => {
 app.post("/api/reassurance", apiLimiter, async (req: Request, res: Response) => {
   console.log(`[REASSURANCE] Origin: ${req.get('origin') || 'no-origin'} | Mood: ${req.body.mood}`);
   
-  if (!groqApiKey) return res.status(503).json({ error: "AI Service unconfigured." });
+  if (!groq) groq = getGroqClient();
+  if (!groq) return res.status(503).json({ error: "AI Service unconfigured." });
 
   const result = ReassuranceSchema.safeParse(req.body);
   if (!result.success) return res.status(400).json({ error: "Invalid data" });
@@ -214,7 +217,8 @@ app.post("/api/reassurance", apiLimiter, async (req: Request, res: Response) => 
 app.post("/api/chat", apiLimiter, async (req: Request, res: Response) => {
   console.log(`[CHAT] Origin: ${req.get('origin') || 'no-origin'}`);
   
-  if (!groqApiKey) return res.status(503).json({ error: "AI Service unconfigured." });
+  if (!groq) groq = getGroqClient();
+  if (!groq) return res.status(503).json({ error: "AI Service unconfigured." });
 
   const result = ChatSchema.safeParse(req.body);
   if (!result.success) return res.status(400).json({ error: "Invalid data" });

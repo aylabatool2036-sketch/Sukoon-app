@@ -97,13 +97,15 @@ export const GuidedHomeFlow = ({
       !aiResponseRef.current &&
       !loadingAIRef.current
     ) {
-      handleReflect("I'm doing okay today. Give me a short, sweet positive message.");
+      handleContinue();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMoodSelect = useCallback((mood: string) => {
     setSelectedMood(mood);
+    // When a mood is selected, ensure we are in the 'entry' step to show the slider
+    setStep('entry');
   }, []);
 
   // Breathing animation
@@ -193,20 +195,19 @@ export const GuidedHomeFlow = ({
                       <span className="text-3xl font-bold text-primary-strong">{intensity}</span>
                     </div>
                     
-                    <div className="relative h-12 flex items-center">
-                      <input 
-                        type="range" 
-                        min="1" 
-                        max="10" 
-                        value={intensity} 
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          setIntensity(val);
-                          onSaveMoodRef.current(selectedMood, val);
-                        }}
-                        className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary-strong"
-                      />
-                    </div>
+	                    <div className="relative h-12 flex items-center">
+	                      <input 
+	                        type="range" 
+	                        min="1" 
+	                        max="10" 
+	                        value={intensity} 
+	                        onChange={(e) => {
+	                          const val = parseInt(e.target.value);
+	                          setIntensity(val);
+	                        }}
+	                        className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary-strong"
+	                      />
+	                    </div>
                     
 	                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
 	                      <span>Mild</span>
