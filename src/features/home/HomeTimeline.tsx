@@ -31,12 +31,13 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
       mood === 'okay' ? 'neutral' : 
       mood === 'low' ? 'sad' : 
       mood === 'stressed' ? 'stressed' :
+      mood === 'anxious' ? 'anxious' :
       mood as Mood;
 
     await dbService.moods.save({
       uid: user.uid,
       mood: moodValue,
-      intensity: intensity || 5,
+      intensity: Number(intensity) || 5,
       note: note || "",
       timestamp: new Date()
     });
@@ -181,16 +182,16 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
                                 <span className={cn("text-lg font-bold tracking-tight block", sukoonMode ? "text-slate-100" : "text-gray-800")}>
                                   Feeling {(item as MoodEntry).mood}
                                 </span>
-                                {(item as MoodEntry).intensity && (
-                                  <span className={cn(
-                                    "px-2 py-0.5 rounded-full text-[10px] font-bold",
-                                    (item as MoodEntry).intensity! > 7 ? "bg-red-50 text-red-500" :
-                                    (item as MoodEntry).intensity! > 4 ? "bg-amber-50 text-amber-500" :
-                                    "bg-emerald-50 text-emerald-500"
-                                  )}>
-                                    Level {(item as MoodEntry).intensity}
-                                  </span>
-                                )}
+	                                {(item as MoodEntry).intensity !== undefined && (
+	                                  <span className={cn(
+	                                    "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+	                                    (item as MoodEntry).intensity! >= 7 ? "bg-rose-50 text-rose-600 border border-rose-100" :
+	                                    (item as MoodEntry).intensity! >= 4 ? "bg-amber-50 text-amber-600 border border-amber-100" :
+	                                    "bg-emerald-50 text-emerald-600 border border-emerald-100"
+	                                  )}>
+	                                    Level {(item as MoodEntry).intensity}
+	                                  </span>
+	                                )}
                               </div>
                               {(item as MoodEntry).note && (
                                 <p className="text-sm text-gray-500 mt-1 italic">"{(item as MoodEntry).note}"</p>

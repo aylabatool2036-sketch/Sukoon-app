@@ -26,7 +26,7 @@ export const GuidedHomeFlow = ({
   initialMood?: string | null;
 }) => {
   const initialStep = initialMood ? (initialMood === 'okay' ? 'ai' : 'calm') : 'entry';
-  const [step, setStep] = useState<'entry' | 'calm' | 'reflect' | 'ai'>(initialStep as any);
+  const [step, setStep] = useState<'entry' | 'calm' | 'ai'>(initialStep as any);
   const [selectedMood, setSelectedMood] = useState(initialMood || '');
   const [intensity, setIntensity] = useState(5);
   const [reflection, setReflection] = useState('');
@@ -45,38 +45,39 @@ export const GuidedHomeFlow = ({
   useEffect(() => { aiResponseRef.current = aiResponse; }, [aiResponse]);
   useEffect(() => { loadingAIRef.current = loadingAI; }, [loadingAI]);
 
-  const handleReflect = useCallback(async (val: string) => {
-    setReflection(val);
+  const handleContinue = useCallback(async () => {
+    // Save the mood and intensity
+    onSaveMoodRef.current(selectedMood, intensity);
+    
+    if (selectedMood === 'okay') {
+      setStep('ai');
+      setLoadingAI(true);
+      try {
+        const resp = await aiService.getReassurance('neutral', `I'm feeling okay with intensity ${intensity}`, lang);
+        setAIResponse(resp.text || resp.error || "I'm here for you.");
+      } catch {
+        setAIResponse("Take a deep breath. I'm here.");
+      } finally {
+        setLoadingAI(false);
+      }
+    } else {
+      setStep('calm');
+    }
+  }, [selectedMood, intensity, lang]);
+
+  const handleFinishBreathing = useCallback(async () => {
     setStep('ai');
     setLoadingAI(true);
-    
-    // Save the reflection as a note in the mood entry
-    onSaveMoodRef.current(selectedMood, intensity, val);
-
     try {
-      // Map mood for AI consistency
-      const moodMap: any = { stressed: 'stressed', anxious: 'anxious', low: 'sad', okay: 'neutral' };
-      const resp = await aiService.getReassurance(moodMap[selectedMood] || selectedMood, val, lang);
+      const moodMap: any = { stressed: 'stressed', anxious: 'anxious', low: 'sad' };
+      const resp = await aiService.getReassurance(moodMap[selectedMood] || selectedMood, `I'm feeling ${selectedMood} with intensity ${intensity}`, lang);
       setAIResponse(resp.text || resp.error || "I'm here for you.");
     } catch {
       setAIResponse("Take a deep breath. I'm here.");
     } finally {
       setLoadingAI(false);
     }
-  }, [selectedMood, lang]);
-
-  // Mood selection → advance step
-  useEffect(() => {
-    if (!selectedMood || step !== 'entry') return;
-    const timer = setTimeout(() => {
-      if (selectedMood === 'okay') {
-        handleReflect("I'm doing okay today. Give me a short, sweet positive message.");
-      } else {
-        setStep('calm');
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [selectedMood, step, handleReflect]);
+  }, [selectedMood, intensity, lang]);
 
   // Initial mood from parent — only fires once on mount
   useEffect(() => {
@@ -103,8 +104,7 @@ export const GuidedHomeFlow = ({
 
   const handleMoodSelect = useCallback((mood: string) => {
     setSelectedMood(mood);
-    onSaveMoodRef.current(mood, intensity);
-  }, [intensity]);
+  }, []);
 
   // Breathing animation
   useEffect(() => {
@@ -141,10 +141,9 @@ export const GuidedHomeFlow = ({
          <motion.div 
             initial={{ width: 0 }}
             animate={{ 
-               width: step === 'entry' ? '25%' : 
-                      step === 'calm' ? '50%' : 
-                      step === 'reflect' ? '75%' : '100%' 
-            }}
+	                width: step === 'entry' ? '33%' : 
+	                      step === 'calm' ? '66%' : '100%' 
+	            }}
             className="h-full bg-primary-strong"
          />
       </div>
@@ -209,70 +208,49 @@ export const GuidedHomeFlow = ({
                       />
                     </div>
                     
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                      <span>Mild</span>
-                      <span>Moderate</span>
-                      <span>Overwhelming</span>
-                    </div>
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
+	                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
+	                      <span>Mild</span>
+	                      <span>Moderate</span>
+	                      <span>Overwhelming</span>
+	                    </div>
 
-            {step === 'calm' && (
-              <motion.div
-                key="calm"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full space-y-10 text-center"
-              >
-                <div className="space-y-4">
-                  <motion.div
-                    animate={{ scale: isBreathingIn ? 1.3 : 1 }}
-                    transition={{ duration: 3, ease: 'easeInOut' }}
-                    className="w-32 h-32 rounded-full bg-primary-soft/20 border-4 border-primary-soft/40 mx-auto flex items-center justify-center"
-                  >
-                    <Wind className="w-10 h-10 text-primary-strong" />
-                  </motion.div>
-                  <p className="text-xl font-semibold text-gray-700">
-                    {isBreathingIn ? (t.breatheIn || 'Breathe In') : (t.breatheOut || 'Breathe Out')}
-                  </p>
-                  <p className="text-sm text-gray-400">{t.breathePrompt || 'Take a slow breath in for 4… hold… out for 6.'}</p>
-                </div>
-                <Button onClick={() => setStep('reflect')} className="w-full">
-                  {t.done || 'Done'} <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </motion.div>
-            )}
+                      <Button 
+                        onClick={handleContinue}
+                        className="w-full mt-8 py-6 text-lg"
+                      >
+                        Continue <ArrowRight className="ml-2 w-5 h-5" />
+                      </Button>
+	                  </motion.div>
+	                )}
+	              </motion.div>
+	            )}
 
-            {step === 'reflect' && (
-              <motion.div
-                key="reflect"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="w-full space-y-6"
-              >
-                <h2 className="text-2xl font-serif font-bold text-center">
-                  {t.heavyPrompt || "What's making this feel heavy right now?"}
-                </h2>
-                <textarea
-                  autoFocus
-                  value={reflection}
-                  onChange={(e) => setReflection(e.target.value)}
-                  placeholder="Write freely..."
-                  className="w-full min-h-[140px] p-4 rounded-2xl bg-gray-50 border-0 outline-none focus:ring-2 focus:ring-primary-soft resize-none text-gray-800"
-                />
-                <Button
-                  onClick={() => reflection.trim() && handleReflect(reflection)}
-                  disabled={!reflection.trim()}
-                  className="w-full"
-                >
-                  <Send className="w-4 h-4 mr-2" /> Send
-                </Button>
-              </motion.div>
-            )}
+	            {step === 'calm' && (
+	              <motion.div
+	                key="calm"
+	                initial={{ opacity: 0, scale: 0.95 }}
+	                animate={{ opacity: 1, scale: 1 }}
+	                exit={{ opacity: 0, scale: 0.95 }}
+	                className="w-full space-y-10 text-center"
+	              >
+	                <div className="space-y-4">
+	                  <motion.div
+	                    animate={{ scale: isBreathingIn ? 1.3 : 1 }}
+	                    transition={{ duration: 3, ease: 'easeInOut' }}
+	                    className="w-32 h-32 rounded-full bg-primary-soft/20 border-4 border-primary-soft/40 mx-auto flex items-center justify-center"
+	                  >
+	                    <Wind className="w-10 h-10 text-primary-strong" />
+	                  </motion.div>
+	                  <p className="text-xl font-semibold text-gray-700">
+	                    {isBreathingIn ? (t.breatheIn || 'Breathe In') : (t.breatheOut || 'Breathe Out')}
+	                  </p>
+	                  <p className="text-sm text-gray-400">{t.breathePrompt || 'Take a slow breath in for 4… hold… out for 6.'}</p>
+	                </div>
+	                <Button onClick={handleFinishBreathing} className="w-full">
+	                  {t.done || 'Done'} <ArrowRight className="w-4 h-4 ml-2" />
+	                </Button>
+	              </motion.div>
+	            )}
 
             {step === 'ai' && (
               <motion.div
