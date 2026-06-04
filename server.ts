@@ -144,11 +144,22 @@ const ChatSchema = z.object({
   message: z.string().min(1).max(2000),
 });
 
+// Moderation Schema
+const ModerationSchema = z.object({
+  text: z.string().min(1).max(1000),
+});
+
 // 5. Rate limiters
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
   message: { error: "Too many requests, please slow down." },
+});
+
+const moderationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: "Too many moderation requests." },
 });
 
 const SYSTEM_INSTRUCTION = `
@@ -171,6 +182,49 @@ MOOD-SPECIFIC BEHAVIOR:
 `;
 
 // 6. Routes
+// Content Moderation endpoint
+app.post("/api/moderate", moderationLimiter, async (req: Request, res: Response) => {
+  if (!groq) groq = getGroqClient();
+  if (!groq) return res.status(200).json({ safe: true }); // fail open if no key
+
+  const result = ModerationSchema.safeParse(req.body);
+  if (!result.success) return res.status(400).json({ error: "Invalid data" });
+
+  const { text } = result.data;
+
+  // Keyword pre-filter for obvious harmful content (fast, no API call needed)
+  const HARMFUL_KEYWORDS = [
+    'suicide', 'kill myself', 'end my life', 'want to die', 'self harm', 'self-harm',
+    'cutting myself', 'overdose', 'hang myself', 'jump off', 'slit', 'bleach',
+    'خودکشی', 'مرنا چاہتا', 'जान देना', // Urdu/Hindi
+  ];
+  const lower = text.toLowerCase();
+  const hasHarmfulKeyword = HARMFUL_KEYWORDS.some(k => lower.includes(k));
+
+  if (hasHarmfulKeyword) {
+    return res.json({ safe: false, reason: 'harmful_content' });
+  }
+
+  // AI moderation for subtle content
+  try {
+    const check = await callGroqWithRetry(() => groq.chat.completions.create({
+      messages: [{
+        role: 'user',
+        content: \`You are a content moderator for a mental wellness app. Is this message safe to post publicly? It should NOT contain: self-harm instructions, suicide methods, hate speech, sexual content, or violence. Reply with only: SAFE or UNSAFE\n\nMessage: "\${text}"\`
+      }],
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0,
+      max_tokens: 10,
+    }));
+
+    const verdict = check.choices[0]?.message?.content?.trim().toUpperCase();
+    return res.json({ safe: verdict === 'SAFE', reason: verdict !== 'SAFE' ? 'ai_flagged' : null });
+  } catch {
+    // On error, fail open (allow post) to not break UX
+    return res.json({ safe: true });
+  }
+});
+
 // Health Check for Render
 app.get("/health", (req, res) => {
   res.status(200).json({ 
