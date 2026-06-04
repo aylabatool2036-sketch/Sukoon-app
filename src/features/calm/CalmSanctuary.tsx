@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wind, CloudMoon, Waves, Cloud as CloudIcon, CloudRain, Zap, Heart, User as UserIcon, Loader2, Sparkles, RefreshCw, Anchor } from 'lucide-react';
+import { Wind, CloudMoon, Waves, Cloud as CloudIcon, CloudRain, Zap, Heart, User as UserIcon, Loader2, Sparkles, RefreshCw, Flag } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
@@ -261,19 +261,49 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
   // localCounts: tracks optimistic count per message id, seeded from m.likes on first interaction
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
   const [localCounts, setLocalCounts] = useState<Record<string, number>>({});
-  // debounce: prevent firing DB call while one is in flight
+  const [reportedSet, setReportedSet] = useState<Set<string>>(new Set());
+  const [postError, setPostError] = useState<string | null>(null);
   const inFlight = React.useRef<Set<string>>(new Set());
+
+  const BACKEND_URL = 'https://sukoon-3al3.onrender.com';
 
   const handlePost = async () => {
     if (!text.trim() || !user) return;
     setPosting(true);
+    setPostError(null);
     try {
+      // Check content safety before posting
+      const modRes = await fetch(`${BACKEND_URL}/api/moderate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.trim() }),
+      }).catch(() => null);
+
+      if (modRes?.ok) {
+        const modData = await modRes.json();
+        if (!modData.safe) {
+          setPostError('Your message was flagged as potentially harmful. Please share something positive and uplifting instead. If you're struggling, please reach out to a mental health professional.');
+          setPosting(false);
+          return;
+        }
+      }
+
       await dbService.wall.post(user.uid, text, lang);
       setText('');
     } catch (e: any) {
-      alert("Error: " + e.message);
+      setPostError('Something went wrong. Please try again.');
     }
     setPosting(false);
+  };
+
+  const handleReport = async (id: string) => {
+    if (!user || reportedSet.has(id)) return;
+    setReportedSet(prev => new Set(prev).add(id));
+    try {
+      await dbService.wall.report(id, user.uid, 'Reported by user');
+    } catch {
+      setReportedSet(prev => { const s = new Set(prev); s.delete(id); return s; });
+    }
   };
 
   const handleLike = async (id: string, firestoreCount: number) => {
@@ -316,6 +346,11 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
               className={cn("w-full min-h-[120px] p-4 text-lg font-serif border-0 rounded-2xl outline-none resize-none",
                 sukoonMode ? "bg-slate-800 text-slate-100" : "bg-gray-50 text-gray-900")}
             />
+            {postError && (
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 leading-relaxed">
+                {postError}
+              </div>
+            )}
             <div className="flex justify-end">
               <Button onClick={handlePost} disabled={!text.trim() || posting} className="rounded-full px-8">
                 {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Hope"}
@@ -348,16 +383,29 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
               <p className="text-xl font-serif italic text-gray-700 dark:text-gray-300 leading-relaxed pl-2 mb-8 border-l-2 border-primary-soft/20 py-1">
                 "{m.text}"
               </p>
-              <button
-                onClick={() => handleLike(m.id!, m.likes ?? 0)}
-                className={cn(
-                  "flex items-center gap-2 font-bold text-sm transition-colors px-4 py-2 rounded-full cursor-pointer",
-                  hasLiked ? "bg-red-50/50 dark:bg-red-900/10 text-red-500" : "text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-slate-800"
-                )}
-              >
-                <Heart className={cn("w-4 h-4 transition-transform active:scale-125", hasLiked ? "text-red-500 fill-current" : "")} />
-                <span>{localCounts[m.id!] ?? m.likes ?? 0}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleLike(m.id!, m.likes ?? 0)}
+                  className={cn(
+                    "flex items-center gap-2 font-bold text-sm transition-colors px-4 py-2 rounded-full cursor-pointer",
+                    hasLiked ? "bg-red-50/50 dark:bg-red-900/10 text-red-500" : "text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-slate-800"
+                  )}
+                >
+                  <Heart className={cn("w-4 h-4 transition-transform active:scale-125", hasLiked ? "text-red-500 fill-current" : "")} />
+                  <span>{localCounts[m.id!] ?? m.likes ?? 0}</span>
+                </button>
+                <button
+                  onClick={() => handleReport(m.id!)}
+                  disabled={reportedSet.has(m.id!)}
+                  title="Report this message"
+                  className={cn(
+                    "p-2 rounded-full transition-colors",
+                    reportedSet.has(m.id!) ? "text-orange-400 bg-orange-50 cursor-default" : "text-gray-300 hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/10"
+                  )}
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </motion.div>
           );
         })}
