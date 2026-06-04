@@ -145,11 +145,23 @@ export const GuidedHomeFlow = ({
                         <span className="text-3xl font-bold text-primary-strong">{intensity}</span>
                       </div>
 
-                      <input
-                        type="range" min="1" max="10" value={intensity}
-                        onChange={e => setIntensity(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary-strong"
-                      />
+                      {/* Touch-friendly intensity buttons — works on Android WebView */}
+                      <div className="flex gap-1.5 justify-between">
+                        {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                          <button
+                            key={n}
+                            onClick={() => setIntensity(n)}
+                            className={cn(
+                              "flex-1 h-10 rounded-xl text-xs font-bold transition-all active:scale-95",
+                              n <= intensity
+                                ? "bg-primary-strong text-white shadow-sm"
+                                : "bg-gray-100 text-gray-400"
+                            )}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
 
                       <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
                         <span>Mild</span>
