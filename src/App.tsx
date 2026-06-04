@@ -19,7 +19,7 @@ import { useAppStore } from './store/useAppStore';
 import { useAppInitialization } from './hooks/useAppInitialization';
 import { dbService } from './services/firebase';
 import { translations } from './translations';
-import { cn } from './lib/utils';
+import { cn, getFriendlyErrorMessage } from './lib/utils';
 
 // UI Components
 import { Button } from './components/ui/Button';
@@ -147,7 +147,7 @@ const LoginView = () => {
         await dbService.auth.loginWithEmail(email, password);
       }
     } catch(e: any) {
-      setError(e.message || 'Authentication failed');
+      setError(getFriendlyErrorMessage(e));
       setLoggingIn(false);
     }
   };
@@ -289,7 +289,7 @@ const SettingsView = () => {
       await dbService.auth.deleteAccount();
       window.location.reload();
     } catch (e: any) {
-      alert("Error deleting account: " + e.message);
+      alert("Error deleting account: " + getFriendlyErrorMessage(e));
       setDeleting(false);
     }
   };
