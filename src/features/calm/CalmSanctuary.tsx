@@ -257,7 +257,12 @@ const Soundscapes = ({ sukoonMode }: { sukoonMode: boolean }) => {
 const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], sukoonMode: boolean, lang: string, user: any }) => {
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
+  // likedMap: tracks like state per message id
+  // localCounts: tracks optimistic count per message id, seeded from m.likes on first interaction
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+  const [localCounts, setLocalCounts] = useState<Record<string, number>>({});
+  // debounce: prevent firing DB call while one is in flight
+  const inFlight = React.useRef<Set<string>>(new Set());
 
   const handlePost = async () => {
     if (!text.trim() || !user) return;
@@ -271,13 +276,28 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
     setPosting(false);
   };
 
-  const handleLike = async (id: string, currentLikes: number) => {
-    const nowLiked = !likedMap[id];
+  const handleLike = async (id: string, firestoreCount: number) => {
+    // Block if a DB call is already in flight for this message
+    if (inFlight.current.has(id)) return;
+
+    const currentLiked = likedMap[id] ?? false;
+    const currentCount = localCounts[id] ?? firestoreCount;
+    const nowLiked = !currentLiked;
+    const newCount = nowLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
+
+    // Optimistic update immediately
     setLikedMap(prev => ({ ...prev, [id]: nowLiked }));
+    setLocalCounts(prev => ({ ...prev, [id]: newCount }));
+
+    inFlight.current.add(id);
     try {
-      await dbService.wall.like(id, currentLikes, nowLiked);
+      await dbService.wall.like(id, currentCount, nowLiked);
     } catch {
-      setLikedMap(prev => ({ ...prev, [id]: !nowLiked }));
+      // Revert on failure
+      setLikedMap(prev => ({ ...prev, [id]: currentLiked }));
+      setLocalCounts(prev => ({ ...prev, [id]: currentCount }));
+    } finally {
+      inFlight.current.delete(id);
     }
   };
 
@@ -329,14 +349,14 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
                 "{m.text}"
               </p>
               <button
-                onClick={() => handleLike(m.id!, m.likes || 0)}
+                onClick={() => handleLike(m.id!, m.likes ?? 0)}
                 className={cn(
                   "flex items-center gap-2 font-bold text-sm transition-colors px-4 py-2 rounded-full cursor-pointer",
                   hasLiked ? "bg-red-50/50 dark:bg-red-900/10 text-red-500" : "text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-slate-800"
                 )}
               >
                 <Heart className={cn("w-4 h-4 transition-transform active:scale-125", hasLiked ? "text-red-500 fill-current" : "")} />
-                <span>{m.likes || 0}</span>
+                <span>{localCounts[m.id!] ?? m.likes ?? 0}</span>
               </button>
             </motion.div>
           );
