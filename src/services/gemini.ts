@@ -9,16 +9,16 @@ export interface GeminiResponse {
 const getBackendUrl = (): string => {
   const RENDER_URL = 'https://sukoon-3al3.onrender.com';
   
-  // Check if running in Capacitor/APK
-  // In APK, window.location.origin is usually 'capacitor://localhost' or similar
   if (typeof window !== 'undefined') {
     const origin = window.location.origin || '';
     
-    // If it's localhost or capacitor or any non-render origin, use Render
-    if (!origin.includes('sukoon-3al3.onrender.com')) {
-      console.log('🟢 External/Mobile detected - using Render URL:', RENDER_URL);
-      return RENDER_URL;
+    // In local development, use the same host
+    if (origin.includes('localhost:5173') || origin.includes('localhost:3000')) {
+      return origin;
     }
+    
+    // For production Firebase web or Capacitor, use the Render URL
+    return RENDER_URL;
   }
   
   return RENDER_URL;
