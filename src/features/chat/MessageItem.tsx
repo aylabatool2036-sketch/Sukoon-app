@@ -4,42 +4,34 @@ import { Bot, User } from 'lucide-react';
 import { cn, formatTime } from '@/src/lib/utils';
 import { ChatMessage } from '@/src/types';
 
-interface MessageItemProps {
-  message: ChatMessage;
-}
-
-export const MessageItem = React.memo(({ message }: MessageItemProps) => {
+export const MessageItem = React.memo(({ message }: { message: ChatMessage }) => {
   const isUser = message.role === 'user';
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      initial={{ opacity: 0, y: 8, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={cn(
-        "flex w-full mb-4",
-        isUser ? "justify-end" : "justify-start"
-      )}
+      className={cn("flex w-full mb-3", isUser ? "justify-end" : "justify-start")}
     >
-      <div className={cn(
-        "flex max-w-[92%] sm:max-w-[85%] md:max-w-[75%] gap-3",
-        isUser ? "flex-row-reverse text-right" : "flex-row"
-      )}>
+      <div className={cn("flex max-w-[88%] sm:max-w-[80%] gap-2", isUser ? "flex-row-reverse" : "flex-row")}>
         <div className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-sm",
-          isUser ? "bg-primary-strong text-white" : "bg-white border border-gray-100 text-primary-soft"
+          "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-sm",
+          isUser ? "bg-primary-strong text-white" : "bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 text-primary-soft"
         )}>
-          {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+          {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 min-w-0">
           <div className={cn(
-            "p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap transition-colors",
-            isUser 
-              ? "bg-primary-strong text-white rounded-tr-none shadow-sm" 
-              : "bg-white text-gray-800 rounded-tl-none border border-gray-100 shadow-sm"
+            "px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words",
+            isUser
+              ? "bg-primary-strong text-white rounded-tr-sm"
+              : "bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-slate-100 rounded-tl-sm border border-gray-100 dark:border-slate-700"
           )}>
             {message.content}
           </div>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest px-1">
+          <p className={cn(
+            "text-[10px] font-medium text-gray-400 dark:text-slate-500 px-1",
+            isUser ? "text-right" : "text-left"
+          )}>
             {formatTime(message.timestamp)}
           </p>
         </div>
@@ -47,5 +39,4 @@ export const MessageItem = React.memo(({ message }: MessageItemProps) => {
     </motion.div>
   );
 });
-
 MessageItem.displayName = 'MessageItem';
