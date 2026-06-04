@@ -19,7 +19,7 @@ export const GuidedHomeFlow = ({
 }: {
   lang: Language;
   onComplete: () => void;
-  onSaveMood: (mood: string, note?: string) => void;
+  onSaveMood: (mood: string, intensity: number, note?: string) => void;
   onJournal: () => void;
   onFutureMe: () => void;
   onChat: () => void;
@@ -28,6 +28,7 @@ export const GuidedHomeFlow = ({
   const initialStep = initialMood ? (initialMood === 'okay' ? 'ai' : 'calm') : 'entry';
   const [step, setStep] = useState<'entry' | 'calm' | 'reflect' | 'ai'>(initialStep as any);
   const [selectedMood, setSelectedMood] = useState(initialMood || '');
+  const [intensity, setIntensity] = useState(5);
   const [reflection, setReflection] = useState('');
   const [aiResponse, setAIResponse] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
@@ -50,7 +51,7 @@ export const GuidedHomeFlow = ({
     setLoadingAI(true);
     
     // Save the reflection as a note in the mood entry
-    onSaveMoodRef.current(selectedMood, val);
+    onSaveMoodRef.current(selectedMood, intensity, val);
 
     try {
       // Map mood for AI consistency
@@ -102,8 +103,8 @@ export const GuidedHomeFlow = ({
 
   const handleMoodSelect = useCallback((mood: string) => {
     setSelectedMood(mood);
-    onSaveMoodRef.current(mood);
-  }, []);
+    onSaveMoodRef.current(mood, intensity);
+  }, [intensity]);
 
   // Breathing animation
   useEffect(() => {
@@ -181,6 +182,40 @@ export const GuidedHomeFlow = ({
                     </button>
                   ))}
                 </div>
+
+                {selectedMood && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6 pt-8 pb-4"
+                  >
+                    <div className="flex justify-between items-end">
+                      <p className="text-lg font-serif font-bold">How intense is this feeling?</p>
+                      <span className="text-3xl font-bold text-primary-strong">{intensity}</span>
+                    </div>
+                    
+                    <div className="relative h-12 flex items-center">
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={intensity} 
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setIntensity(val);
+                          onSaveMoodRef.current(selectedMood, val);
+                        }}
+                        className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary-strong"
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                      <span>Mild</span>
+                      <span>Moderate</span>
+                      <span>Overwhelming</span>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
 

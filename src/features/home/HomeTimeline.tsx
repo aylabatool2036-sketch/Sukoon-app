@@ -25,7 +25,7 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
     setFlowActive(true);
   };
 
-  const handleSaveMoodDirectly = React.useCallback(async (mood: string, note?: string) => {
+  const handleSaveMoodDirectly = React.useCallback(async (mood: string, intensity: number, note?: string) => {
     if (!user) return;
     const moodValue = 
       mood === 'okay' ? 'neutral' : 
@@ -36,7 +36,7 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
     await dbService.moods.save({
       uid: user.uid,
       mood: moodValue,
-      intensity: 5,
+      intensity: intensity || 5,
       note: note || "",
       timestamp: new Date()
     });
@@ -177,9 +177,21 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
                         >
                           <div className="flex items-center gap-4">
                             <div className="flex-1">
-                              <span className={cn("text-lg font-bold tracking-tight block", sukoonMode ? "text-slate-100" : "text-gray-800")}>
-                                Feeling {(item as MoodEntry).mood}
-                              </span>
+                              <div className="flex items-center justify-between">
+                                <span className={cn("text-lg font-bold tracking-tight block", sukoonMode ? "text-slate-100" : "text-gray-800")}>
+                                  Feeling {(item as MoodEntry).mood}
+                                </span>
+                                {(item as MoodEntry).intensity && (
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                                    (item as MoodEntry).intensity! > 7 ? "bg-red-50 text-red-500" :
+                                    (item as MoodEntry).intensity! > 4 ? "bg-amber-50 text-amber-500" :
+                                    "bg-emerald-50 text-emerald-500"
+                                  )}>
+                                    Level {(item as MoodEntry).intensity}
+                                  </span>
+                                )}
+                              </div>
                               {(item as MoodEntry).note && (
                                 <p className="text-sm text-gray-500 mt-1 italic">"{(item as MoodEntry).note}"</p>
                               )}
