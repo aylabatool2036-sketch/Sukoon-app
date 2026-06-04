@@ -285,6 +285,19 @@ export const dbService = {
         handleFirestoreError(e, 'update', `wallOfHope/${id}`);
       }
     },
+    report: async (messageId: string, reporterUid: string, reason: string) => {
+      try {
+        await addDoc(collection(db, 'reports'), {
+          messageId,
+          reporterUid,
+          reason,
+          reportedAt: serverTimestamp(),
+          status: 'pending',
+        });
+      } catch (e) {
+        handleFirestoreError(e, 'create', 'reports');
+      }
+    },
   },
 
   futureMe: {
