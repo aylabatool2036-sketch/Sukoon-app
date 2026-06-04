@@ -33,6 +33,7 @@ app.use(helmet({
         "https://*.firebasestorage.app",
         "https://sukoon-3al3.onrender.com",
         "capacitor://localhost",
+        "https://localhost",
         "http://localhost:*"
       ],
       "img-src": [
@@ -55,7 +56,10 @@ app.use(cors({
     "https://sukoon-3al3.onrender.com",
     "http://localhost:5173",
     "http://localhost:3000",
-    "capacitor://localhost"
+    "capacitor://localhost",
+    "https://localhost",
+    "http://localhost",
+    "*"
   ],
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization']

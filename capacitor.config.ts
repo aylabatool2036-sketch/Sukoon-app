@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     cleartext: true,
-    allowNavigation: ['sukoon-3al3.onrender.com']
+    allowNavigation: ['*']
   }
 };
 

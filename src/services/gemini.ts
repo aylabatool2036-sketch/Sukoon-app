@@ -14,15 +14,9 @@ const getBackendUrl = (): string => {
   if (typeof window !== 'undefined') {
     const origin = window.location.origin || '';
     
-    // If it's localhost or capacitor, use Render
-    if (origin.includes('localhost') || origin.includes('capacitor')) {
-      console.log('🟢 APK/Mobile detected - using Render URL:', RENDER_URL);
-      return RENDER_URL;
-    }
-    
-    // For web production
-    if (origin.includes('http')) {
-      console.log('🟡 Web detected - using Render URL:', RENDER_URL);
+    // If it's localhost or capacitor or any non-render origin, use Render
+    if (!origin.includes('sukoon-3al3.onrender.com')) {
+      console.log('🟢 External/Mobile detected - using Render URL:', RENDER_URL);
       return RENDER_URL;
     }
   }
