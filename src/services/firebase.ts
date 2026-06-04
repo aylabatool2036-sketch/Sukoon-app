@@ -59,61 +59,59 @@ export const dbService = {
     deleteAccount: async () => {
       const user = auth.currentUser;
       if (!user) return;
-      
       const uid = user.uid;
 
-      // Recursive deletion of all user-associated data
-      const collections = [
-        'moods',
-        'journal',
-        'goals',
-        'memories',
-        'decisions',
-        'futureMeMessages',
-        'wallOfHope',
-        'wallOfHopeRateLimit'
-      ];
-
-      for (const colName of collections) {
+      // Delete all collections that use uid field
+      const uidCollections = ['moods', 'journal', 'goals', 'memories', 'decisions', 'futureMeMessages', 'wallOfHope'];
+      for (const colName of uidCollections) {
         try {
-          const q = query(collection(db, colName), where('uid', '==', uid));
-          const snap = await getDocs(q);
-          const batch = writeBatch(db);
-          snap.docs.forEach((d) => batch.delete(d.ref));
-          await batch.commit();
+          const snap = await getDocs(query(collection(db, colName), where('uid', '==', uid)));
+          if (snap.docs.length > 0) {
+            const batch = writeBatch(db);
+            snap.docs.forEach((d) => batch.delete(d.ref));
+            await batch.commit();
+          }
         } catch (e) {
           console.error(`Error deleting from ${colName}:`, e);
         }
       }
 
-      // Special case for subcollections /users/{uid}/chat
+      // wallOfHopeRateLimit is keyed by uid directly (not a query)
       try {
-        const q = query(collection(db, 'users', uid, 'chat'));
-        const snap = await getDocs(q);
-        const batch = writeBatch(db);
-        snap.docs.forEach((d) => batch.delete(d.ref));
-        await batch.commit();
+        await deleteDoc(doc(db, 'wallOfHopeRateLimit', uid));
       } catch (e) {
-        console.error("Error deleting chat history:", e);
+        console.error('Error deleting wallOfHopeRateLimit:', e);
       }
 
-      // Delete user profile
+      // Chat subcollection under users/{uid}/chat
+      try {
+        const snap = await getDocs(collection(db, 'users', uid, 'chat'));
+        if (snap.docs.length > 0) {
+          const batch = writeBatch(db);
+          snap.docs.forEach((d) => batch.delete(d.ref));
+          await batch.commit();
+        }
+      } catch (e) {
+        console.error('Error deleting chat history:', e);
+      }
+
+      // Delete user profile doc
       try {
         await deleteDoc(doc(db, 'users', uid));
       } catch (e) {
-        console.error("Error deleting profile:", e);
+        console.error('Error deleting user profile:', e);
       }
 
-      // Purge Firebase Storage assets
+      // Firebase Storage cleanup
       try {
         const storageRef = ref(storage, `futureMeAudio/${uid}/`);
         const fileList = await listAll(storageRef);
         await Promise.all(fileList.items.map((file) => deleteObject(file)));
       } catch (e) {
-        console.error("Error purging storage assets:", e);
+        console.error('Error purging storage assets:', e);
       }
-      
-      // Finally, delete the user from Firebase Auth
+
+      // Finally delete the Firebase Auth user
       await deleteUser(user);
     },
     getUserProfile: async (uid: string) => {
@@ -320,3 +318,4 @@ export const dbService = {
     },
   },
 };
+
