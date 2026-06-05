@@ -71,11 +71,13 @@ export const dbService = {
       const uidCollections = ['moods', 'journal', 'goals', 'memories', 'decisions', 'futureMeMessages', 'wallOfHope'];
       for (const colName of uidCollections) {
         try {
-          const snap = await getDocs(query(collection(db, colName), where('uid', '==', uid)));
-          if (snap.docs.length > 0) {
+          const q = query(collection(db, colName), where('uid', '==', uid));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
             const batch = writeBatch(db);
             snap.docs.forEach((d) => batch.delete(d.ref));
             await batch.commit();
+            console.log(`Deleted ${snap.size} docs from ${colName}`);
           }
         } catch (e) {
           console.error(`Error deleting from ${colName}:`, e);
