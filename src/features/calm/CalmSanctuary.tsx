@@ -501,7 +501,8 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
         )}
       </AnimatePresence>
     </div>
-  };
+  )  
+};
 
 const DistractTasks = ({ sukoonMode }: { sukoonMode: boolean }) => {
   const [task, setTask] = useState<'rhythm' | 'facts' | 'breathing' | 'none'>('none');
