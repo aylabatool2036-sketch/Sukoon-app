@@ -36,7 +36,7 @@ import { GeminiChat } from './features/chat/GeminiChat';
 export default function App() {
   useAppInitialization();
   const { user, profile, initializing, sukoonMode, lang } = useAppStore();
-  const [view, setView] = useState<'home' | 'journal' | 'calm' | 'chat' | 'settings'>('home');
+  const [view, setView] = useState<'home' | 'journal' | 'calm' | 'chat' | 'settings' | 'privacy'>('home');
   const t = translations[lang];
 
   if (initializing) {
@@ -100,7 +100,8 @@ export default function App() {
               {view === 'calm' && <CalmSanctuary />}
               {view === 'chat' && <GeminiChat />}
               {view === 'journal' && <JournalView />}
-              {view === 'settings' && <SettingsView />}
+              {view === 'settings' && <SettingsView setView={setView} />}
+              {view === 'privacy' && <PrivacyView onBack={() => setView('settings')} />}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -257,18 +258,18 @@ const JournalView = () => {
         {journalEntries.map(entry => (
           <Card key={entry.id} className={cn("p-8 hover:shadow-xl transition-all border-0 shadow-sm", sukoonMode ? "bg-slate-900/50" : "bg-white")}>
             <div className="flex justify-between items-start mb-4">
-	              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-	                {format(
-	                  entry.timestamp instanceof Date 
-	                    ? entry.timestamp 
-	                    : (entry.timestamp as any)?.toDate 
-	                      ? (entry.timestamp as any).toDate() 
-	                      : (entry.timestamp as any)?.seconds 
-	                        ? new Date((entry.timestamp as any).seconds * 1000) 
-	                        : new Date(), 
-	                  'PPP'
-	                )}
-	              </span>
+		              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+		                {format(
+		                  entry.timestamp instanceof Date 
+		                    ? entry.timestamp 
+		                    : (entry.timestamp as any)?.toDate 
+		                      ? (entry.timestamp as any).toDate() 
+		                      : (entry.timestamp as any)?.seconds 
+		                        ? new Date((entry.timestamp as any).seconds * 1000) 
+		                        : new Date(), 
+		                  'PPP'
+		                )}
+		              </span>
             </div>
             <p className={cn("text-xl font-serif leading-relaxed", sukoonMode ? "text-slate-200" : "text-gray-800")}>{entry.content}</p>
           </Card>
@@ -278,7 +279,7 @@ const JournalView = () => {
   );
 };
 
-const SettingsView = () => {
+const SettingsView = ({ setView }: { setView: (v: any) => void }) => {
   const { lang, setLang, sukoonMode, setSukoonMode, user, profile } = useAppStore();
   const [deleting, setDeleting] = useState(false);
   const [showReauthModal, setShowReauthModal] = useState(false);
@@ -387,11 +388,9 @@ const SettingsView = () => {
                Delete Account
              </Button>
              
-             <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="block">
-               <Button variant="secondary" className="w-full">
-                 Privacy Policy
-               </Button>
-             </a>
+             <Button variant="secondary" onClick={() => setView('privacy')} className="w-full">
+               Privacy Policy
+             </Button>
            </div>
         </div>
       </Card>
@@ -469,7 +468,53 @@ const SettingsView = () => {
         </AnimatePresence>
       )}
     </div>
-  };
+  );
+};
+
+const PrivacyView = ({ onBack }: { onBack: () => void }) => {
+  const { sukoonMode } = useAppStore();
+  
+  return (
+    <div className="space-y-8 max-w-2xl mx-auto pb-10">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
+          <X className="w-6 h-6" />
+        </Button>
+        <h2 className={cn("text-4xl font-serif font-bold tracking-tight", sukoonMode ? "text-white" : "text-gray-900")}>Privacy Policy</h2>
+      </div>
+
+      <Card className={cn("p-8 border-0 shadow-sm leading-relaxed space-y-6", sukoonMode ? "bg-slate-900 text-slate-300" : "bg-white text-gray-700")}>
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>1. Information We Collect</h3>
+          <p>We collect information you voluntarily provide, including account details (email), wellness data (mood logs), and personal content (journals, Wall of Hope messages).</p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>2. How We Use Your Information</h3>
+          <p>Your information is used to provide personalized support and facilitate AI-powered features. <strong>We never sell your personal data to third parties.</strong></p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>3. AI Processing</h3>
+          <p>We use high-performance AI models to provide emotional support. Data sent for processing is used solely for generating responses and is not used to train models.</p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>4. Data Security</h3>
+          <p>We implement industry-standard security measures, including secure authentication and data isolation, to protect your sanctuary.</p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>5. Your Rights</h3>
+          <p>You can permanently delete your account and all associated data at any time through the Settings section. All records are purged immediately.</p>
+        </section>
+
+        <div className="pt-6 border-t border-gray-100 dark:border-slate-800 text-sm text-gray-400">
+          Last Updated: June 5, 2026 • support@sukoon.app
+        </div>
+      </Card>
+    </div>
+  );
 };
 
 const OnboardingView = ({ onComplete }: { onComplete: () => void }) => {

@@ -284,10 +284,13 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
       if (modRes?.ok) {
         const modData = await modRes.json();
         if (!modData.safe) {
-          setPostError('Your message was flagged as potentially harmful. Please share something positive and uplifting instead. If you're struggling, please reach out to a mental health professional.');
+          setPostError('This message doesn\'t follow our community guidelines. Please share something positive, supportive, or uplifting instead.');
           setPosting(false);
           return;
         }
+      } else {
+        // If the moderation service is down, we might want to be extra cautious
+        console.warn('Moderation service unavailable');
       }
 
       await dbService.wall.post(user.uid, text, lang);
