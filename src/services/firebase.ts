@@ -345,5 +345,127 @@ export const dbService = {
       );
     },
   },
-};
 
+  goals: {
+    save: async (uid: string, title: string, description: string = '', frequency: 'daily' | 'weekly' = 'daily') => {
+      try {
+        return await addDoc(collection(db, 'goals'), {
+          uid,
+          title,
+          description,
+          frequency,
+          completedDates: [],
+          createdAt: serverTimestamp(),
+        });
+      } catch (e) {
+        handleFirestoreError(e, 'create', 'goals');
+      }
+    },
+    update: async (id: string, data: any) => {
+      try {
+        await updateDoc(doc(db, 'goals', id), data);
+      } catch (e) {
+        handleFirestoreError(e, 'update', `goals/${id}`);
+      }
+    },
+    subscribe: (uid: string, callback: (goals: any[]) => void) => {
+      const q = query(collection(db, 'goals'), where('uid', '==', uid));
+      return onSnapshot(
+        q,
+        (snap) => {
+          const goals = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          callback(goals);
+        },
+        (error) => handleFirestoreError(error, 'list', 'goals')
+      );
+    },
+    delete: async (id: string) => {
+      try {
+        await deleteDoc(doc(db, 'goals', id));
+      } catch (e) {
+        handleFirestoreError(e, 'delete', `goals/${id}`);
+      }
+    },
+  },
+
+  memories: {
+    save: async (uid: string, patternName: string, observation: string, type: 'trigger' | 'strength' | 'insight' = 'insight') => {
+      try {
+        return await addDoc(collection(db, 'memories'), {
+          uid,
+          patternName,
+          observation,
+          type,
+          lastTriggered: serverTimestamp(),
+        });
+      } catch (e) {
+        handleFirestoreError(e, 'create', 'memories');
+      }
+    },
+    update: async (id: string, data: any) => {
+      try {
+        await updateDoc(doc(db, 'memories', id), data);
+      } catch (e) {
+        handleFirestoreError(e, 'update', `memories/${id}`);
+      }
+    },
+    subscribe: (uid: string, callback: (memories: any[]) => void) => {
+      const q = query(collection(db, 'memories'), where('uid', '==', uid));
+      return onSnapshot(
+        q,
+        (snap) => {
+          const memories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          callback(memories);
+        },
+        (error) => handleFirestoreError(error, 'list', 'memories')
+      );
+    },
+    delete: async (id: string) => {
+      try {
+        await deleteDoc(doc(db, 'memories', id));
+      } catch (e) {
+        handleFirestoreError(e, 'delete', `memories/${id}`);
+      }
+    },
+  },
+
+  decisions: {
+    save: async (uid: string, problem: string, analysis: any = {}) => {
+      try {
+        return await addDoc(collection(db, 'decisions'), {
+          uid,
+          problem,
+          analysis,
+          createdAt: serverTimestamp(),
+        });
+      } catch (e) {
+        handleFirestoreError(e, 'create', 'decisions');
+      }
+    },
+    update: async (id: string, data: any) => {
+      try {
+        await updateDoc(doc(db, 'decisions', id), data);
+      } catch (e) {
+        handleFirestoreError(e, 'update', `decisions/${id}`);
+      }
+    },
+    subscribe: (uid: string, callback: (decisions: any[]) => void) => {
+      const q = query(collection(db, 'decisions'), where('uid', '==', uid));
+      return onSnapshot(
+        q,
+        (snap) => {
+          const decisions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          callback(decisions);
+        },
+        (error) => handleFirestoreError(error, 'list', 'decisions')
+      );
+    },
+    delete: async (id: string) => {
+      try {
+        await deleteDoc(doc(db, 'decisions', id));
+      } catch (e) {
+        handleFirestoreError(e, 'delete', `decisions/${id}`);
+      }
+    },
+  },
+};
