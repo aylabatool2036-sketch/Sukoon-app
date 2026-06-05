@@ -475,7 +475,7 @@ const PrivacyView = ({ onBack }: { onBack: () => void }) => {
   const { sukoonMode } = useAppStore();
   
   return (
-    <div className="space-y-8 max-w-2xl mx-auto pb-10">
+    <div className="space-y-8 max-w-2xl mx-auto pb-32">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
           <X className="w-6 h-6" />
