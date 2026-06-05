@@ -394,17 +394,20 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
                   <Heart className={cn("w-4 h-4 transition-transform active:scale-125", hasLiked ? "text-red-500 fill-current" : "")} />
                   <span>{localCounts[m.id!] ?? m.likes ?? 0}</span>
                 </button>
-                <button
-                  onClick={() => handleReport(m.id!)}
-                  disabled={reportedSet.has(m.id!)}
-                  title="Report this message"
-                  className={cn(
-                    "p-2 rounded-full transition-colors",
-                    reportedSet.has(m.id!) ? "text-orange-400 bg-orange-50 cursor-default" : "text-gray-300 hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/10"
-                  )}
-                >
-                  <Flag className="w-3.5 h-3.5" />
-                </button>
+                {!reportedSet.has(m.id!) && (
+                  <button
+                    onClick={() => handleReport(m.id!)}
+                    title="Report this message"
+                    className="p-2 rounded-full transition-colors text-gray-300 hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/10"
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {reportedSet.has(m.id!) && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500 px-3 py-1 bg-orange-50 rounded-full">
+                    Reported
+                  </span>
+                )}
               </div>
             </motion.div>
           );

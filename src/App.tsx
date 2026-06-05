@@ -11,7 +11,8 @@ import {
   AlertCircle,
   ShieldAlert,
   Loader2,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react';
 
 import { format } from 'date-fns';
@@ -280,16 +281,34 @@ const JournalView = () => {
 const SettingsView = () => {
   const { lang, setLang, sukoonMode, setSukoonMode, user, profile } = useAppStore();
   const [deleting, setDeleting] = useState(false);
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthPassword, setReauthPassword] = useState('');
+  const [reauthError, setReauthError] = useState('');
   const t = translations[lang];
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
+    setShowReauthModal(true);
+  };
+
+  const handleReauthAndDelete = async () => {
+    if (!reauthPassword.trim()) {
+      setReauthError('Please enter your password');
+      return;
+    }
     setDeleting(true);
+    setReauthError('');
     try {
+      await dbService.auth.reauthenticate(reauthPassword);
       await dbService.auth.deleteAccount();
       window.location.reload();
     } catch (e: any) {
-      alert("Error deleting account: " + getFriendlyErrorMessage(e));
+      const msg = getFriendlyErrorMessage(e);
+      if (msg.includes('wrong-password') || msg.includes('invalid-credential')) {
+        setReauthError('Incorrect password. Please try again.');
+      } else {
+        setReauthError(msg);
+      }
       setDeleting(false);
     }
   };
@@ -367,11 +386,90 @@ const SettingsView = () => {
                {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
                Delete Account
              </Button>
+             
+             <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="block">
+               <Button variant="secondary" className="w-full">
+                 Privacy Policy
+               </Button>
+             </a>
            </div>
         </div>
       </Card>
+
+      {showReauthModal && (
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-sm"
+            >
+              <Card className="p-8 border-0 shadow-2xl relative overflow-hidden bg-white">
+                <button 
+                  onClick={() => {
+                    setShowReauthModal(false);
+                    setReauthPassword('');
+                    setReauthError('');
+                  }}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 rounded-full p-2"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">Confirm Password</h3>
+                    <p className="text-sm text-gray-500">For security, please enter your password to delete your account.</p>
+                  </div>
+                  {reauthError && (
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+                      {reauthError}
+                    </div>
+                  )}
+                  <input 
+                    type="password"
+                    value={reauthPassword}
+                    onChange={e => setReauthPassword(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleReauthAndDelete()}
+                    placeholder="Enter your password"
+                    className="w-full p-4 bg-gray-50 rounded-xl border-0 outline-none focus:ring-2 focus:ring-primary-soft/20"
+                    disabled={deleting}
+                  />
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => {
+                        setShowReauthModal(false);
+                        setReauthPassword('');
+                        setReauthError('');
+                      }}
+                      className="flex-1"
+                      disabled={deleting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="danger" 
+                      onClick={handleReauthAndDelete} 
+                      className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
+                      disabled={deleting}
+                    >
+                      {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
-  );
+  };
 };
 
 const OnboardingView = ({ onComplete }: { onComplete: () => void }) => {

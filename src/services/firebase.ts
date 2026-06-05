@@ -15,7 +15,7 @@ import {
   deleteDoc,
   writeBatch,
 } from 'firebase/firestore';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { ref, listAll, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '../lib/firebase';
 import {
@@ -56,6 +56,12 @@ export const dbService = {
     signUpWithEmail: (email: string, pass: string) =>
       createUserWithEmailAndPassword(auth, email, pass),
     logout: () => auth.signOut(),
+    reauthenticate: async (password: string) => {
+      const user = auth.currentUser;
+      if (!user || !user.email) throw new Error('No user logged in');
+      const credential = EmailAuthProvider.credential(user.email, password);
+      return reauthenticateWithCredential(user, credential);
+    },
     deleteAccount: async () => {
       const user = auth.currentUser;
       if (!user) return;
@@ -112,7 +118,16 @@ export const dbService = {
       }
 
       // Finally delete the Firebase Auth user
-      await deleteUser(user);
+      // Note: This requires recent authentication (within ~5 minutes)
+      try {
+        await deleteUser(user);
+      } catch (error: any) {
+        // If requires-recent-login, throw with a clear message
+        if (error.code === 'auth/requires-recent-login') {
+          throw new Error('Please sign in again to delete your account for security reasons.');
+        }
+        throw error;
+      }
     },
     getUserProfile: async (uid: string) => {
       try {
