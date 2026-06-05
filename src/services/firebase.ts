@@ -313,6 +313,36 @@ export const dbService = {
         handleFirestoreError(e, 'create', 'reports');
       }
     },
+    delete: async (id: string) => {
+      try {
+        await deleteDoc(doc(db, 'wallOfHope', id));
+      } catch (e) {
+        handleFirestoreError(e, 'delete', `wallOfHope/${id}`);
+      }
+    },
+    deleteWithCleanup: async (id: string) => {
+      try {
+        // Delete all reports associated with this post
+        const reportsSnap = await getDocs(
+          query(collection(db, 'reports'), where('messageId', '==', id))
+        );
+        
+        const batch = writeBatch(db);
+        
+        // Add all report deletions to batch
+        reportsSnap.docs.forEach((reportDoc) => {
+          batch.delete(reportDoc.ref);
+        });
+        
+        // Add post deletion to batch
+        batch.delete(doc(db, 'wallOfHope', id));
+        
+        // Commit all deletions atomically
+        await batch.commit();
+      } catch (e) {
+        handleFirestoreError(e, 'delete', `wallOfHope/${id}`);
+      }
+    },
   },
 
   futureMe: {

@@ -190,7 +190,7 @@ service cloud.firestore {
       allow update: if isAuthenticated() &&
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
                     (request.resource.data.likes == resource.data.likes + 1 || request.resource.data.likes == resource.data.likes - 1);
-      allow delete: if isAdmin();
+      allow delete: if isOwner(resource.data.uid) || isAdmin();
     }
 
     // Rate limit tracker (write-only by owner)

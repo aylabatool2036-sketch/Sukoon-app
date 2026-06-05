@@ -263,6 +263,8 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
   const [localCounts, setLocalCounts] = useState<Record<string, number>>({});
   const [reportedSet, setReportedSet] = useState<Set<string>>(new Set());
   const [postError, setPostError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const inFlight = React.useRef<Set<string>>(new Set());
 
   const BACKEND_URL = 'https://sukoon-3al3.onrender.com';
@@ -303,6 +305,21 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
       await dbService.wall.report(id, user.uid, 'Reported by user');
     } catch {
       setReportedSet(prev => { const s = new Set(prev); s.delete(id); return s; });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!user) return;
+    setDeleting(id);
+    try {
+      // Use deleteWithCleanup to remove post and associated reports
+      await dbService.wall.deleteWithCleanup(id);
+      setDeleteConfirm(null);
+    } catch (e) {
+      console.error('Error deleting post:', e);
+      alert('Failed to delete post. Please try again.');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -394,7 +411,17 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
                   <Heart className={cn("w-4 h-4 transition-transform active:scale-125", hasLiked ? "text-red-500 fill-current" : "")} />
                   <span>{localCounts[m.id!] ?? m.likes ?? 0}</span>
                 </button>
-                {!reportedSet.has(m.id!) && (
+                {user?.uid === m.uid && (
+                  <button
+                    onClick={() => setDeleteConfirm(m.id!)}
+                    title="Delete this post"
+                    className="p-2 rounded-full transition-colors text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
+                    disabled={deleting === m.id!}
+                  >
+                    {deleting === m.id! ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span className="text-lg">×</span>}
+                  </button>
+                )}
+                {!reportedSet.has(m.id!) && user?.uid !== m.uid && (
                   <button
                     onClick={() => handleReport(m.id!)}
                     title="Report this message"
@@ -413,9 +440,65 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
           );
         })}
       </div>
+
+      {/* Delete Confirmation Modal - Instagram Style */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => !deleting && setDeleteConfirm(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                "rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden",
+                sukoonMode ? "bg-slate-900" : "bg-white"
+              )}
+            >
+              <div className="p-6 text-center space-y-4">
+                <h3 className="text-lg font-bold">Delete Post?</h3>
+                <p className={cn("text-sm", sukoonMode ? "text-gray-400" : "text-gray-600")}>
+                  This action cannot be undone. Your post and all associated reports will be permanently deleted.
+                </p>
+              </div>
+              <div className="flex divide-x dark:divide-slate-700">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  disabled={deleting === deleteConfirm}
+                  className={cn(
+                    "flex-1 py-3 font-semibold transition-colors",
+                    sukoonMode ? "hover:bg-slate-800" : "hover:bg-gray-50"
+                  )}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteConfirm)}
+                  disabled={deleting === deleteConfirm}
+                  className="flex-1 py-3 font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deleting === deleteConfirm ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-  );
-};
+  };
 
 const DistractTasks = ({ sukoonMode }: { sukoonMode: boolean }) => {
   const [task, setTask] = useState<'rhythm' | 'facts' | 'breathing' | 'none'>('none');
