@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wind, CloudMoon, Waves, Cloud as CloudIcon, CloudRain, Zap, Heart, User as UserIcon, Loader2, Sparkles, RefreshCw, Flag } from 'lucide-react';
+import { Wind, CloudMoon, Waves, Cloud as CloudIcon, CloudRain, Zap, Heart, User as UserIcon, Loader2, Sparkles, RefreshCw, Flag, Trash2 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
@@ -271,14 +271,16 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
 
   const handlePost = async () => {
     if (!text.trim() || !user) return;
+    const messageText = text.trim();
     setPosting(true);
     setPostError(null);
+    
     try {
       // Check content safety before posting
       const modRes = await fetch(`${BACKEND_URL}/api/moderate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.trim() }),
+        body: JSON.stringify({ text: messageText }),
       }).catch(() => null);
 
       if (modRes?.ok) {
@@ -288,17 +290,19 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
           setPosting(false);
           return;
         }
-      } else {
-        // If the moderation service is down, we might want to be extra cautious
-        console.warn('Moderation service unavailable');
       }
 
-      await dbService.wall.post(user.uid, text, lang);
+      // Optimistic clear to make it feel fast
       setText('');
+      await dbService.wall.post(user.uid, messageText, lang);
     } catch (e: any) {
+      console.error('Post error:', e);
       setPostError('Something went wrong. Please try again.');
+      // Restore text if it failed
+      setText(messageText);
+    } finally {
+      setPosting(false);
     }
-    setPosting(false);
   };
 
   const handleReport = async (id: string) => {
@@ -418,10 +422,11 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
                   <button
                     onClick={() => setDeleteConfirm(m.id!)}
                     title="Delete this post"
-                    className="p-2 rounded-full transition-colors text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
+                    className="flex items-center gap-1 px-3 py-2 rounded-full transition-colors text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 border border-transparent hover:border-red-100"
                     disabled={deleting === m.id!}
                   >
-                    {deleting === m.id! ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span className="text-lg">×</span>}
+                    {deleting === m.id! ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Delete</span>
                   </button>
                 )}
                 {!reportedSet.has(m.id!) && user?.uid !== m.uid && (

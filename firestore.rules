@@ -121,56 +121,50 @@ service cloud.firestore {
     }
 
     match /moods/{moodId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read, delete: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidMood(request.resource.data);
       allow update: if isDocOwner() && isValidMood(request.resource.data) &&
                      isUnmodified('uid') &&
                      isUnmodified('timestamp');
-      allow delete: if isDocOwner();
     }
 
     match /journal/{entryId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read, delete: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidJournal(request.resource.data);
       allow update: if isDocOwner() && isValidJournal(request.resource.data) &&
                      isUnmodified('uid') &&
                      isUnmodified('timestamp');
-      allow delete: if isDocOwner();
     }
 
     match /goals/{goalId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read, delete: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidGoal(request.resource.data);
       allow update: if isDocOwner() && isValidGoal(request.resource.data) &&
                      isUnmodified('uid') &&
                      isUnmodified('createdAt');
-      allow delete: if isDocOwner();
     }
 
     match /memories/{memoryId} {
-      allow read: if isDocOwner();
+      allow read, delete: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidMemory(request.resource.data);
       allow update: if isDocOwner() && isValidMemory(request.resource.data) &&
                      isUnmodified('uid');
-      allow delete: if isDocOwner();
     }
 
     match /decisions/{sessionId} {
-      allow read: if isDocOwner();
+      allow read, delete: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidDecision(request.resource.data);
       allow update: if isDocOwner() && isValidDecision(request.resource.data) &&
                      isUnmodified('uid') &&
                      isUnmodified('createdAt');
-      allow delete: if isDocOwner();
     }
 
     match /futureMeMessages/{messageId} {
-      allow read: if isDocOwner();
+      allow read, delete: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidFutureMeMessage(request.resource.data);
       allow update: if isDocOwner() && isValidFutureMeMessage(request.resource.data) &&
                      isUnmodified('uid') &&
                      isUnmodified('createdAt');
-      allow delete: if isDocOwner();
     }
 
     // Wall of Hope: rate limit — 1 post per 60 seconds per user
@@ -193,9 +187,9 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.uid) || isAdmin();
     }
 
-    // Rate limit tracker (write-only by owner)
+    // Rate limit tracker (read/write by owner)
     match /wallOfHopeRateLimit/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, create, update, delete: if isOwner(userId);
     }
 
     // Reports — users can create, admins can read/delete

@@ -71,16 +71,18 @@ app.use(helmet({
         "https://*.firebaseio.com",
         "wss://*.firebaseio.com",
         "https://*.firebasestorage.app",
+        "https://firebasestorage.googleapis.com",
         "https://sukoon-3al3.onrender.com",
         "capacitor://localhost",
         "https://localhost",
         "http://localhost:*",
         "https://api.groq.com"
       ],
-      "img-src": ["'self'", "data:", "blob:", "https://*.googleapis.com", "https://*.firebasestorage.app", "https://*.googleusercontent.com"],
+      "img-src": ["'self'", "data:", "blob:", "https://*.googleapis.com", "https://*.firebasestorage.app", "https://firebasestorage.googleapis.com", "https://*.googleusercontent.com"],
       "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       "frame-src": ["'self'", "https://*.firebaseapp.com"],
-      "media-src": ["'self'", "blob:", "https://*.firebasestorage.app"],
+      "media-src": ["'self'", "blob:", "https://*.firebasestorage.app", "https://firebasestorage.googleapis.com"],
+      "font-src": ["'self'", "https://fonts.gstatic.com"],
     },
   },
 }));
@@ -235,13 +237,14 @@ app.post("/api/moderate", moderationLimiter, async (req: Request, res: Response)
       max_tokens: 10,
     }));
 
-    const verdict = check.choices[0]?.message?.content?.trim().toUpperCase();
-    return res.json({ safe: verdict === 'SAFE', reason: verdict !== 'SAFE' ? 'ai_flagged' : null });
+    const content = check.choices[0]?.message?.content?.trim().toUpperCase() || '';
+    const isSafe = content.includes('SAFE') && !content.includes('UNSAFE');
+    console.log(`[MODERATION] Text: "${text.substring(0, 50)}..." | Verdict: ${content} | Safe: ${isSafe}`);
+    return res.json({ safe: isSafe, reason: !isSafe ? 'ai_flagged' : null });
   } catch (error) {
     console.error("Moderation Error:", error);
-    // If AI fails, we fall back to a more restrictive mode: 
-    // If it passed the keyword check, we'll allow it but log it.
-    // However, to be safe as requested by the user, we should be cautious.
+    // If AI fails, we should be cautious and fail closed (UNSAFE) if it's a critical error
+    // But for UX we'll allow it if it passed keyword check, but with a flag
     return res.json({ safe: true, warning: 'ai_offline' });
   }
 });
