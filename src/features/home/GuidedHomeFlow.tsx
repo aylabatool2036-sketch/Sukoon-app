@@ -88,7 +88,7 @@ export const GuidedHomeFlow = ({
   return (
     <div className="fixed inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="px-6 py-5 flex items-center justify-between border-b border-gray-50 dark:border-slate-900 flex-shrink-0">
+      <header className="px-6 pt-safe pb-5 flex items-center justify-between border-b border-gray-50 dark:border-slate-900 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary-strong rounded-xl flex items-center justify-center">
             <Heart className="w-5 h-5 text-white" />

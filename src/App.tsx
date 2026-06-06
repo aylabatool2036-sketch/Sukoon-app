@@ -72,7 +72,7 @@ export default function App() {
       {sukoonMode && <div className="fixed inset-0 z-0 atmosphere opacity-30 pointer-events-none" />}
       
       {/* App Top Bar */}
-      <header className="absolute top-0 left-0 right-0 z-40 px-6 py-4 flex items-center justify-between pointer-events-none">
+      <header className="absolute top-0 left-0 right-0 z-40 px-6 pt-safe pb-4 flex items-center justify-between pointer-events-none mt-2">
          <div className="flex items-center gap-2 pointer-events-auto">
             <div className={cn(
               "w-8 h-8 rounded-xl flex items-center justify-center shadow-md transform -rotate-12 transition-colors",
@@ -85,7 +85,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area - Fixed vertical scrolling by ensuring flex-1 and overflow-y-auto */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-20 pb-28 px-4 sm:px-6 relative z-10 w-full scroll-smooth">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-24 pb-32 px-4 sm:px-6 relative z-10 w-full scroll-smooth">
         <div className="max-w-4xl mx-auto w-full h-full">
           <AnimatePresence mode="wait">
             <motion.div
@@ -254,27 +254,37 @@ const JournalView = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {journalEntries.map(entry => (
-          <Card key={entry.id} className={cn("p-8 hover:shadow-xl transition-all border-0 shadow-sm", sukoonMode ? "bg-slate-900/50" : "bg-white")}>
-            <div className="flex justify-between items-start mb-4">
-		              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-		                {format(
-		                  entry.timestamp instanceof Date 
-		                    ? entry.timestamp 
-		                    : (entry.timestamp as any)?.toDate 
-		                      ? (entry.timestamp as any).toDate() 
-		                      : (entry.timestamp as any)?.seconds 
-		                        ? new Date((entry.timestamp as any).seconds * 1000) 
-		                        : new Date(), 
-		                  'PPP'
-		                )}
-		              </span>
-            </div>
-            <p className={cn("text-xl font-serif leading-relaxed", sukoonMode ? "text-slate-200" : "text-gray-800")}>{entry.content}</p>
-          </Card>
-        ))}
-      </div>
+	      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+	        {journalEntries.map(entry => (
+	          <Card key={entry.id} className={cn("p-8 hover:shadow-xl transition-all border-0 shadow-sm relative group", sukoonMode ? "bg-slate-900/50" : "bg-white")}>
+	            <div className="flex justify-between items-start mb-4">
+			              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+			                {format(
+			                  entry.timestamp instanceof Date 
+			                    ? entry.timestamp 
+			                    : (entry.timestamp as any)?.toDate 
+			                      ? (entry.timestamp as any).toDate() 
+			                      : (entry.timestamp as any)?.seconds 
+			                        ? new Date((entry.timestamp as any).seconds * 1000) 
+			                        : new Date(), 
+			                  'PPP'
+			                )}
+			              </span>
+                    <button 
+                      onClick={async () => {
+                        if (window.confirm("Delete this entry?")) {
+                          await dbService.journal.delete(entry.id!);
+                        }
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 hover:text-red-500 rounded-full transition-all text-gray-400"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+	            </div>
+	            <p className={cn("text-xl font-serif leading-relaxed", sukoonMode ? "text-slate-200" : "text-gray-800")}>{entry.content}</p>
+	          </Card>
+	        ))}
+	      </div>
     </div>
   );
 };

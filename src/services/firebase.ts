@@ -253,6 +253,13 @@ export const dbService = {
         (error) => handleFirestoreError(error, 'list', 'journal')
       );
     },
+    delete: async (id: string) => {
+      try {
+        await deleteDoc(doc(db, 'journal', id));
+      } catch (e) {
+        handleFirestoreError(e, 'delete', `journal/${id}`);
+      }
+    },
   },
 
   wall: {
