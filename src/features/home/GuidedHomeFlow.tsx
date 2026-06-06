@@ -109,8 +109,8 @@ export const GuidedHomeFlow = ({
         />
       </div>
 
-      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-8">
-        <div className="max-w-2xl mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="max-w-2xl mx-auto w-full min-h-full flex flex-col">
           <AnimatePresence mode="wait">
 
             {/* ENTRY — mood select + intensity */}
@@ -204,7 +204,7 @@ export const GuidedHomeFlow = ({
             {step === 'ai' && (
               <motion.div key="ai" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
                 className="w-full space-y-6">
-                <Card className="p-6 sm:p-8 border-0 shadow-sm bg-white min-h-[120px] flex items-center justify-center">
+	                <Card className="p-5 sm:p-8 border-0 shadow-sm bg-white min-h-[100px] flex items-center justify-center">
                   {loadingAI ? (
                     <Loader2 className="w-8 h-8 animate-spin text-primary-strong" />
                   ) : (

@@ -357,17 +357,17 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
 
   return (
     <div className="space-y-12">
-      <Card className={cn("p-8 border-0 shadow-lg", sukoonMode ? "bg-slate-900" : "bg-white")}>
-        <div className="flex gap-6 items-start">
-          <div className="w-12 h-12 rounded-full bg-primary-soft/10 flex items-center justify-center shrink-0">
-            <Heart className="w-6 h-6 text-primary-strong" />
+      <Card className={cn("p-5 sm:p-8 border-0 shadow-lg", sukoonMode ? "bg-slate-900" : "bg-white")}>
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-soft/10 flex items-center justify-center shrink-0">
+            <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary-strong" />
           </div>
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 w-full space-y-4">
             <textarea
               value={text}
               onChange={e => setText(e.target.value)}
               placeholder="Leave a message of hope for someone else..."
-              className={cn("w-full min-h-[120px] p-4 text-lg font-serif border-0 rounded-2xl outline-none resize-none",
+              className={cn("w-full min-h-[100px] sm:min-h-[120px] p-4 text-base sm:text-lg font-serif border-0 rounded-2xl outline-none resize-none",
                 sukoonMode ? "bg-slate-800 text-slate-100" : "bg-gray-50 text-gray-900")}
             />
             {postError && (
@@ -388,9 +388,9 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
         {messages.map((m) => {
           const hasLiked = likedMap[m.id!];
           return (
-            <motion.div layout key={m.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              className={cn("p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800", sukoonMode ? "bg-slate-900" : "bg-white")}>
-              <div className="flex items-center gap-3 mb-6">
+	            <motion.div layout key={m.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+	              className={cn("p-6 sm:p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800", sukoonMode ? "bg-slate-900" : "bg-white")}>
+	              <div className="flex items-center gap-3 mb-4 sm:mb-6">
                 <div className="w-8 h-8 rounded-full bg-primary-soft/10 flex items-center justify-center">
                   <UserIcon className="w-4 h-4 text-primary-strong" />
                 </div>
@@ -404,9 +404,9 @@ const WallOfHope = ({ messages, sukoonMode, lang, user }: { messages: any[], suk
                   </span>
                 </div>
               </div>
-              <p className="text-xl font-serif italic text-gray-700 dark:text-gray-300 leading-relaxed pl-2 mb-8 border-l-2 border-primary-soft/20 py-1">
-                "{m.text}"
-              </p>
+	              <p className="text-lg sm:text-xl font-serif italic text-gray-700 dark:text-gray-300 leading-relaxed pl-2 mb-6 sm:mb-8 border-l-2 border-primary-soft/20 py-1">
+	                "{m.text}"
+	              </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleLike(m.id!, m.likes ?? 0)}

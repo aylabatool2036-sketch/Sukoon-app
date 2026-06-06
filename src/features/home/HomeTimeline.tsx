@@ -85,7 +85,7 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
             className="space-y-16"
           >
             {/* Step 1: Entry */}
-            <div className="text-center space-y-12 pt-8">
+	            <div className="text-center space-y-8 sm:space-y-12 pt-4 sm:pt-8">
               <div className="space-y-4">
                 <h2 className={cn(
                   "text-sm font-bold uppercase tracking-widest",
@@ -94,7 +94,7 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
                   Salaam, {profile?.displayName?.split(' ')[0]}
                 </h2>
                 <h1 className={cn(
-                  "text-5xl md:text-6xl font-serif font-bold tracking-tight leading-tight transition-colors duration-1000",
+                  "text-4xl sm:text-5xl md:text-6xl font-serif font-bold tracking-tight leading-tight transition-colors duration-1000",
                   sukoonMode ? "text-slate-100" : "text-gray-900"
                 )}>
                   {t.feelingQuestion}
