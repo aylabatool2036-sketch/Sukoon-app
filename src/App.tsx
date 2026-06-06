@@ -66,7 +66,7 @@ export default function App() {
     <div 
       dir="ltr"
       className={cn(
-        "h-[100svh] w-screen transition-colors duration-1000 overflow-hidden relative flex flex-col",
+        "min-h-[100svh] w-full transition-colors duration-1000 relative flex flex-col",
         sukoonMode ? "bg-slate-950 text-slate-100" : "bg-pastel-green text-gray-900"
       )}>
       {sukoonMode && <div className="fixed inset-0 z-0 atmosphere opacity-30 pointer-events-none" />}
@@ -85,8 +85,8 @@ export default function App() {
       </header>
 
       {/* Main Content Area - Fixed vertical scrolling by ensuring flex-1 and overflow-y-auto */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-24 pb-40 px-4 sm:px-6 relative z-10 w-full scroll-smooth">
-        <div className="max-w-4xl mx-auto w-full min-h-full flex flex-col">
+      <main className="flex-1 pt-24 pb-40 px-4 sm:px-6 relative z-10 w-full scroll-smooth">
+        <div className="max-w-4xl mx-auto w-full flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
               key={view}
@@ -155,9 +155,9 @@ const LoginView = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-screen flex items-center justify-center bg-pastel-green p-6 overflow-hidden relative">
+    <div className="min-h-[100svh] w-full flex items-center justify-center bg-pastel-green p-6 relative overflow-y-auto">
       <BackgroundBlobs />
-      <Card className="w-full max-w-sm p-6 sm:p-10 border-0 shadow-2xl relative z-10 text-center space-y-8 sm:space-y-10">
+      <Card className="w-full max-w-sm p-6 sm:p-10 border-0 shadow-2xl relative z-10 text-center space-y-8 sm:space-y-10 my-auto">
         <div className="space-y-4">
           <div className="w-20 h-20 bg-primary-strong rounded-[32px] flex items-center justify-center mx-auto shadow-xl shadow-primary-soft/30 rotate-12">
             <CloudRain className="w-10 h-10 text-white" />
@@ -552,8 +552,8 @@ const OnboardingView = ({ onComplete }: { onComplete: () => void }) => {
   };
 
   return (
-    <div className="min-h-[100svh] w-screen flex items-center justify-center bg-white p-6 overflow-y-auto">
-       <div className="max-w-sm w-full space-y-8 sm:space-y-12 text-center py-10">
+    <div className="min-h-[100svh] w-full flex items-center justify-center bg-white p-6 overflow-y-auto">
+       <div className="max-w-sm w-full space-y-8 sm:space-y-12 text-center py-10 my-auto">
           <div className="space-y-4">
              <h2 className="text-4xl font-serif font-bold tracking-tight">{steps[step].title}</h2>
              <p className="text-gray-400 font-medium">{steps[step].desc}</p>

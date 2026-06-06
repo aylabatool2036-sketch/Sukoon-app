@@ -77,7 +77,7 @@ export const HomeTimeline = ({ onSOS, setView }: { onSOS: () => void, setView: (
   };
 
   return (
-    <div className="space-y-16 pb-20">
+    <div className="space-y-16 pb-32">
       <AnimatePresence mode="wait">
         {!flowActive ? (
           <motion.div 

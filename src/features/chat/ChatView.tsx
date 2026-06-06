@@ -17,7 +17,7 @@ interface ChatViewProps {
 
 export const ChatView = ({ messages, loading, isTyping, error, helpText, inputPlaceholder, onSendMessage, onClearHistory }: ChatViewProps) => {
   return (
-    <div className="flex flex-col h-[calc(100svh-180px)] sm:h-[calc(100dvh-160px)] overflow-hidden rounded-3xl bg-white dark:bg-slate-900 shadow-sm border border-gray-50 dark:border-slate-800">
+    <div className="flex flex-col h-[600px] max-h-[80vh] min-h-[400px] overflow-hidden rounded-3xl bg-white dark:bg-slate-900 shadow-sm border border-gray-50 dark:border-slate-800">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 dark:border-slate-800 flex-shrink-0">
         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Secure conversation</span>
