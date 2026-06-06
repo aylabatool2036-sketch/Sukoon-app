@@ -1,7 +1,8 @@
 import * as React from "react";
 import { cn } from "@/src/lib/utils";
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger';
   size?: 'sm' | 'md' | 'lg' | 'icon';
 }
@@ -9,11 +10,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
     const variants = {
-      primary: "bg-primary-strong text-white hover:bg-primary-strong/90 shadow-md shadow-primary-strong/20",
-      secondary: "bg-surface-raised text-theme-secondary hover:bg-surface-overlay border border-theme",
-      ghost: "bg-transparent hover:bg-surface-raised text-theme-secondary",
-      outline: "bg-transparent border border-theme hover:border-primary-soft hover:text-primary-soft text-theme-secondary",
-      danger: "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20",
+      primary: "bg-primary-strong text-white hover:bg-primary-strong/90 shadow-md",
+      secondary: "bg-primary-soft/10 text-primary-soft hover:bg-primary-soft/20",
+      ghost: "bg-transparent hover:bg-gray-100 text-gray-600",
+      outline: "bg-transparent border border-gray-200 hover:border-primary-soft hover:text-primary-soft",
+      danger: "bg-red-500 text-white hover:bg-red-600",
     };
 
     const sizes = {
@@ -27,7 +28,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center rounded-2xl font-bold transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none tracking-tight",
+          "inline-flex items-center justify-center rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none tracking-tight",
           variants[variant],
           sizes[size],
           className
@@ -40,3 +41,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 export { Button };
+
