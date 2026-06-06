@@ -8,9 +8,9 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-[32px] transition-all duration-400",
-      variant === 'default' && "bg-surface border border-theme card-shadow",
-      variant === 'outline' && "bg-transparent border border-theme",
+      "rounded-[32px] transition-all",
+      variant === 'default' && "bg-white border border-gray-100 shadow-sm",
+      variant === 'outline' && "bg-transparent border border-gray-200",
       variant === 'ghost' && "bg-transparent",
       className
     )}
@@ -24,7 +24,7 @@ const CardHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement
 );
 
 const CardTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-  <h3 className={cn("text-2xl font-serif font-bold leading-tight text-theme-primary", className)} {...props} />
+  <h3 className={cn("text-2xl font-serif font-bold leading-tight", className)} {...props} />
 );
 
 const CardContent = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -36,3 +36,4 @@ const CardFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement
 );
 
 export { Card, CardHeader, CardTitle, CardContent, CardFooter };
+
