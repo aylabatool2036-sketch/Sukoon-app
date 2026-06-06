@@ -11,7 +11,8 @@ import {
   AlertCircle,
   ShieldAlert,
   Loader2,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react';
 
 import { format } from 'date-fns';
@@ -35,12 +36,12 @@ import { GeminiChat } from './features/chat/GeminiChat';
 export default function App() {
   useAppInitialization();
   const { user, profile, initializing, sukoonMode, lang } = useAppStore();
-  const [view, setView] = useState<'home' | 'journal' | 'calm' | 'chat' | 'settings'>('home');
+  const [view, setView] = useState<'home' | 'journal' | 'calm' | 'chat' | 'settings' | 'privacy'>('home');
   const t = translations[lang];
 
   if (initializing) {
     return (
-      <div className="h-[100dvh] w-screen flex flex-col items-center justify-center bg-pastel-green dark:bg-slate-950">
+      <div className="h-[100dvh] w-screen flex flex-col items-center justify-center bg-pastel-green">
         <motion.div 
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 3, repeat: Infinity }}
@@ -65,13 +66,13 @@ export default function App() {
     <div 
       dir="ltr"
       className={cn(
-        "h-[100dvh] w-screen transition-colors duration-1000 overflow-hidden relative flex flex-col",
+        "min-h-[100svh] w-full transition-colors duration-1000 relative flex flex-col",
         sukoonMode ? "bg-slate-950 text-slate-100" : "bg-pastel-green text-gray-900"
       )}>
       {sukoonMode && <div className="fixed inset-0 z-0 atmosphere opacity-30 pointer-events-none" />}
       
       {/* App Top Bar */}
-      <header className="absolute top-0 left-0 right-0 z-40 px-6 py-4 flex items-center justify-between pointer-events-none">
+      <header className="absolute top-0 left-0 right-0 z-40 px-6 pt-safe pb-4 flex items-center justify-between pointer-events-none mt-2">
          <div className="flex items-center gap-2 pointer-events-auto">
             <div className={cn(
               "w-8 h-8 rounded-xl flex items-center justify-center shadow-md transform -rotate-12 transition-colors",
@@ -84,8 +85,8 @@ export default function App() {
       </header>
 
       {/* Main Content Area - Fixed vertical scrolling by ensuring flex-1 and overflow-y-auto */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-20 pb-28 px-4 sm:px-6 relative z-10 w-full scroll-smooth">
-        <div className="max-w-4xl mx-auto w-full h-full">
+      <main className="flex-1 pt-24 pb-40 px-4 sm:px-6 relative z-10 w-full scroll-smooth">
+        <div className="max-w-4xl mx-auto w-full flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
               key={view}
@@ -99,7 +100,8 @@ export default function App() {
               {view === 'calm' && <CalmSanctuary />}
               {view === 'chat' && <GeminiChat />}
               {view === 'journal' && <JournalView />}
-              {view === 'settings' && <SettingsView />}
+              {view === 'settings' && <SettingsView setView={setView} />}
+              {view === 'privacy' && <PrivacyView onBack={() => setView('settings')} />}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -107,16 +109,14 @@ export default function App() {
 
       {/* Bottom Navigation Bar */}
       <nav className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 px-4 pb-8 pt-10 pb-safe transition-all duration-500",
+        "fixed bottom-0 left-0 right-0 z-50 px-4 pb-8 pt-10 pb-safe transition-colors duration-1000",
         sukoonMode 
-          ? "bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent" 
-          : "bg-gradient-to-t from-white via-white/90 to-transparent"
+          ? "bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" 
+          : "bg-gradient-to-t from-white via-white/80 to-transparent"
       )}>
         <div className={cn(
-          "max-w-md mx-auto flex items-center justify-between px-4 py-2 rounded-full shadow-2xl backdrop-blur-2xl border transition-all duration-500",
-          sukoonMode 
-            ? "bg-slate-900/95 border-white/5 shadow-black/40" 
-            : "bg-white/95 border-black/5 shadow-black/10"
+          "max-w-md mx-auto flex items-center justify-between px-6 py-3 rounded-full shadow-2xl backdrop-blur-xl border transition-all duration-500",
+           sukoonMode ? "bg-slate-900/90 border-slate-800/50 shadow-primary-strong/5" : "bg-white/90 border-white/50"
         )}>
           <NavButton icon={<HomeIcon />} label="Home" active={view === 'home'} onClick={() => setView('home')} sukoon={sukoonMode} />
           <NavButton icon={<BookOpen />} label="Journal" active={view === 'journal'} onClick={() => setView('journal')} sukoon={sukoonMode} />
@@ -155,9 +155,9 @@ const LoginView = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-screen flex items-center justify-center bg-pastel-green p-6 overflow-hidden relative">
+    <div className="min-h-[100svh] w-full flex items-center justify-center bg-pastel-green p-6 relative overflow-y-auto">
       <BackgroundBlobs />
-      <Card className="w-full max-w-sm p-10 border-0 shadow-2xl relative z-10 text-center space-y-10">
+      <Card className="w-full max-w-sm p-6 sm:p-10 border-0 shadow-2xl relative z-10 text-center space-y-8 sm:space-y-10 my-auto">
         <div className="space-y-4">
           <div className="w-20 h-20 bg-primary-strong rounded-[32px] flex items-center justify-center mx-auto shadow-xl shadow-primary-soft/30 rotate-12">
             <CloudRain className="w-10 h-10 text-white" />
@@ -173,7 +173,7 @@ const LoginView = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email address"
-            className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 outline-none focus:border-primary-soft transition-colors text-gray-900 placeholder-gray-400"
+            className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-primary-soft transition-colors"
             required
           />
           <input 
@@ -181,7 +181,7 @@ const LoginView = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 outline-none focus:border-primary-soft transition-colors text-gray-900 placeholder-gray-400"
+            className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-primary-soft transition-colors"
             required
           />
           <Button 
@@ -231,17 +231,20 @@ const JournalView = () => {
   return (
     <div className="space-y-10">
       <header className="space-y-2 px-1">
-        <h2 className="text-4xl font-serif font-bold tracking-tight text-theme-primary">{t.journal}</h2>
-        <p className="text-theme-secondary text-sm">A timeline of your reflections and deep thoughts.</p>
+        <h2 className={cn("text-4xl font-serif font-bold tracking-tight", sukoonMode ? "text-white" : "text-gray-900")}>{t.journal}</h2>
+        <p className="text-gray-500">A timeline of your reflections and deep thoughts.</p>
       </header>
 
-      <Card className="p-6 shadow-sm border-0">
+      <Card className={cn("p-6 border-0 shadow-sm transition-all", sukoonMode ? "bg-slate-900/50" : "bg-white")}>
         <div className="space-y-4">
           <textarea 
             value={content}
             onChange={e => setContent(e.target.value)}
             placeholder="What's on your mind today?"
-            className="w-full min-h-[120px] p-4 text-lg border-0 rounded-xl focus:ring-2 focus:ring-primary-soft/20 outline-none resize-none input-theme placeholder-gray-400"
+            className={cn(
+              "w-full min-h-[120px] p-4 text-lg border-0 rounded-xl focus:ring-2 outline-none resize-none",
+              sukoonMode ? "bg-slate-800 text-slate-100" : "bg-gray-50 text-gray-900"
+            )}
           />
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={!content.trim() || loading}>
@@ -251,56 +254,84 @@ const JournalView = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {journalEntries.map(entry => (
-          <Card key={entry.id} className={cn("p-8 hover:shadow-xl transition-all border-0 shadow-sm", sukoonMode ? "bg-slate-900/50" : "bg-white")}>
-            <div className="flex justify-between items-start mb-4">
-	              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-	                {format(
-	                  entry.timestamp instanceof Date 
-	                    ? entry.timestamp 
-	                    : (entry.timestamp as any)?.toDate 
-	                      ? (entry.timestamp as any).toDate() 
-	                      : (entry.timestamp as any)?.seconds 
-	                        ? new Date((entry.timestamp as any).seconds * 1000) 
-	                        : new Date(), 
-	                  'PPP'
-	                )}
-	              </span>
-            </div>
-            <p className={cn("text-xl font-serif leading-relaxed", sukoonMode ? "text-slate-200" : "text-gray-800")}>{entry.content}</p>
-          </Card>
-        ))}
-      </div>
+	      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+	        {journalEntries.map(entry => (
+	          <Card key={entry.id} className={cn("p-8 hover:shadow-xl transition-all border-0 shadow-sm relative group", sukoonMode ? "bg-slate-900/50" : "bg-white")}>
+	            <div className="flex justify-between items-start mb-4">
+			              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+			                {format(
+			                  entry.timestamp instanceof Date 
+			                    ? entry.timestamp 
+			                    : (entry.timestamp as any)?.toDate 
+			                      ? (entry.timestamp as any).toDate() 
+			                      : (entry.timestamp as any)?.seconds 
+			                        ? new Date((entry.timestamp as any).seconds * 1000) 
+			                        : new Date(), 
+			                  'PPP'
+			                )}
+			              </span>
+                    <button 
+                      onClick={async () => {
+                        if (window.confirm("Delete this entry?")) {
+                          await dbService.journal.delete(entry.id!);
+                        }
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 hover:text-red-500 rounded-full transition-all text-gray-400"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+	            </div>
+	            <p className={cn("text-xl font-serif leading-relaxed", sukoonMode ? "text-slate-200" : "text-gray-800")}>{entry.content}</p>
+	          </Card>
+	        ))}
+	      </div>
     </div>
   );
 };
 
-const SettingsView = () => {
+const SettingsView = ({ setView }: { setView: (v: any) => void }) => {
   const { lang, setLang, sukoonMode, setSukoonMode, user, profile } = useAppStore();
   const [deleting, setDeleting] = useState(false);
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthPassword, setReauthPassword] = useState('');
+  const [reauthError, setReauthError] = useState('');
   const t = translations[lang];
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
+    setShowReauthModal(true);
+  };
+
+  const handleReauthAndDelete = async () => {
+    if (!reauthPassword.trim()) {
+      setReauthError('Please enter your password');
+      return;
+    }
     setDeleting(true);
+    setReauthError('');
     try {
+      await dbService.auth.reauthenticate(reauthPassword);
       await dbService.auth.deleteAccount();
       window.location.reload();
     } catch (e: any) {
-      alert("Error deleting account: " + getFriendlyErrorMessage(e));
+      const msg = getFriendlyErrorMessage(e);
+      if (msg.includes('wrong-password') || msg.includes('invalid-credential')) {
+        setReauthError('Incorrect password. Please try again.');
+      } else {
+        setReauthError(msg);
+      }
       setDeleting(false);
     }
   };
 
   return (
     <div className="space-y-10 max-w-2xl mx-auto">
-      <h2 className="text-4xl font-serif font-bold tracking-tight text-theme-primary">Settings</h2>
-      <Card className="divide-y border-0 shadow-sm divide-theme">
+      <h2 className={cn("text-4xl font-serif font-bold tracking-tight", sukoonMode ? "text-white" : "text-gray-900")}>Settings</h2>
+      <Card className={cn("divide-y border-0 shadow-sm transition-all", sukoonMode ? "bg-slate-900/50 divide-slate-800" : "bg-white divide-gray-50")}>
         <div className="p-8 flex items-center justify-between">
            <div className="space-y-1">
-              <p className="font-bold text-lg text-theme-primary">Language</p>
-              <p className="text-xs text-theme-muted">Select your primary communication language.</p>
+              <p className={cn("font-bold text-lg", sukoonMode ? "text-slate-100" : "text-gray-900")}>Language</p>
+              <p className="text-xs text-gray-400">Select your primary communication language.</p>
            </div>
            <select 
               value={lang} 
@@ -314,7 +345,8 @@ const SettingsView = () => {
                   });
                 }
               }}
-              className="border-0 rounded-xl px-4 py-2 font-bold text-sm outline-none ring-1 transition-all input-theme ring-transparent"
+              className={cn("border-0 rounded-xl px-4 py-2 font-bold text-sm outline-none ring-1 transition-all", 
+                sukoonMode ? "bg-slate-800 text-slate-100 ring-slate-700" : "bg-gray-50 ring-gray-100")}
            >
              <option value="en">English</option>
              <option value="hi">Hindi</option>
@@ -323,8 +355,8 @@ const SettingsView = () => {
         </div>
         <div className="p-8 flex items-center justify-between">
            <div className="space-y-1">
-              <p className="font-bold text-lg text-theme-primary">Sukoon Mode</p>
-              <p className="text-xs text-theme-muted">Low-stimulation interface for overwhelmed moments.</p>
+              <p className={cn("font-bold text-lg", sukoonMode ? "text-slate-100" : "text-gray-900")}>Sukoon Mode</p>
+              <p className="text-xs text-gray-400">Low-stimulation interface for overwhelmed moments.</p>
            </div>
            <div 
              onClick={async () => {
@@ -349,7 +381,7 @@ const SettingsView = () => {
            </div>
         </div>
         <div className="p-8 space-y-6">
-           <div className="p-4 rounded-xl border border-theme bg-surface-raised text-[11px] leading-relaxed text-theme-muted">
+           <div className={cn("p-4 rounded-xl border text-[11px] leading-relaxed", sukoonMode ? "bg-slate-800/50 border-slate-700 text-slate-400" : "bg-gray-50 border-gray-100 text-gray-500")}>
              <p className="font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                <ShieldAlert className="w-3 h-3" /> Medical Disclaimer
              </p>
@@ -365,7 +397,130 @@ const SettingsView = () => {
                {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
                Delete Account
              </Button>
+             
+             <Button variant="secondary" onClick={() => setView('privacy')} className="w-full">
+               Privacy Policy
+             </Button>
            </div>
+        </div>
+      </Card>
+
+      {showReauthModal && (
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-sm"
+            >
+              <Card className="p-8 border-0 shadow-2xl relative overflow-hidden bg-white">
+                <button 
+                  onClick={() => {
+                    setShowReauthModal(false);
+                    setReauthPassword('');
+                    setReauthError('');
+                  }}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 rounded-full p-2"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">Confirm Password</h3>
+                    <p className="text-sm text-gray-500">For security, please enter your password to delete your account.</p>
+                  </div>
+                  {reauthError && (
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+                      {reauthError}
+                    </div>
+                  )}
+                  <input 
+                    type="password"
+                    value={reauthPassword}
+                    onChange={e => setReauthPassword(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleReauthAndDelete()}
+                    placeholder="Enter your password"
+                    className="w-full p-4 bg-gray-50 rounded-xl border-0 outline-none focus:ring-2 focus:ring-primary-soft/20"
+                    disabled={deleting}
+                  />
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => {
+                        setShowReauthModal(false);
+                        setReauthPassword('');
+                        setReauthError('');
+                      }}
+                      className="flex-1"
+                      disabled={deleting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="danger" 
+                      onClick={handleReauthAndDelete} 
+                      className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
+                      disabled={deleting}
+                    >
+                      {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      )}
+    </div>
+  );
+};
+
+const PrivacyView = ({ onBack }: { onBack: () => void }) => {
+  const { sukoonMode } = useAppStore();
+  
+  return (
+    <div className="space-y-8 max-w-2xl mx-auto pb-32">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
+          <X className="w-6 h-6" />
+        </Button>
+        <h2 className={cn("text-4xl font-serif font-bold tracking-tight", sukoonMode ? "text-white" : "text-gray-900")}>Privacy Policy</h2>
+      </div>
+
+      <Card className={cn("p-8 border-0 shadow-sm leading-relaxed space-y-6", sukoonMode ? "bg-slate-900 text-slate-300" : "bg-white text-gray-700")}>
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>1. Information We Collect</h3>
+          <p>We collect information you voluntarily provide, including account details (email), wellness data (mood logs), and personal content (journals, Wall of Hope messages).</p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>2. How We Use Your Information</h3>
+          <p>Your information is used to provide personalized support and facilitate AI-powered features. <strong>We never sell your personal data to third parties.</strong></p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>3. AI Processing</h3>
+          <p>We use high-performance AI models to provide emotional support. Data sent for processing is used solely for generating responses and is not used to train models.</p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>4. Data Security</h3>
+          <p>We implement industry-standard security measures, including secure authentication and data isolation, to protect your sanctuary.</p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className={cn("text-xl font-bold", sukoonMode ? "text-slate-100" : "text-gray-900")}>5. Your Rights</h3>
+          <p>You can permanently delete your account and all associated data at any time through the Settings section. All records are purged immediately.</p>
+        </section>
+
+        <div className="pt-6 border-t border-gray-100 dark:border-slate-800 text-sm text-gray-400">
+          Last Updated: June 5, 2026 • support@sukoon.app
         </div>
       </Card>
     </div>
@@ -397,8 +552,8 @@ const OnboardingView = ({ onComplete }: { onComplete: () => void }) => {
   };
 
   return (
-    <div className="h-[100dvh] w-screen flex items-center justify-center bg-white p-6">
-       <div className="max-w-sm w-full space-y-12 text-center">
+    <div className="min-h-[100svh] w-full flex items-center justify-center bg-white p-6 overflow-y-auto">
+       <div className="max-w-sm w-full space-y-8 sm:space-y-12 text-center py-10 my-auto">
           <div className="space-y-4">
              <h2 className="text-4xl font-serif font-bold tracking-tight">{steps[step].title}</h2>
              <p className="text-gray-400 font-medium">{steps[step].desc}</p>
