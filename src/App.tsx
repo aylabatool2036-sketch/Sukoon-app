@@ -290,7 +290,7 @@ const JournalView = () => {
 };
 
 const SettingsView = ({ setView }: { setView: (v: any) => void }) => {
-  const { lang, setLang, sukoonMode, setSukoonMode, user, profile } = useAppStore();
+  const { lang, setLang, sukoonMode, user, profile } = useAppStore();
   const [deleting, setDeleting] = useState(false);
   const [showReauthModal, setShowReauthModal] = useState(false);
   const [reauthPassword, setReauthPassword] = useState('');
@@ -353,33 +353,7 @@ const SettingsView = ({ setView }: { setView: (v: any) => void }) => {
              <option value="ur">Urdu</option>
            </select>
         </div>
-        <div className="p-8 flex items-center justify-between">
-           <div className="space-y-1">
-              <p className={cn("font-bold text-lg", sukoonMode ? "text-slate-100" : "text-gray-900")}>Sukoon Mode</p>
-              <p className="text-xs text-gray-400">Low-stimulation interface for overwhelmed moments.</p>
-           </div>
-           <div 
-             onClick={async () => {
-               const newMode = !sukoonMode;
-               setSukoonMode(newMode);
-               if (user && profile) {
-                 await dbService.auth.createUserProfile({
-                   ...profile,
-                   silentMode: newMode
-                 });
-               }
-             }}
-             className={cn(
-                "w-12 h-6 rounded-full transition-all cursor-pointer relative",
-                sukoonMode ? "bg-primary-strong" : "bg-gray-200"
-             )}
-           >
-              <div className={cn(
-                "w-4 h-4 bg-white rounded-full absolute top-1 transition-all shadow-sm",
-                sukoonMode ? "right-1" : "left-1"
-              )} />
-           </div>
-        </div>
+
         <div className="p-8 space-y-6">
            <div className={cn("p-4 rounded-xl border text-[11px] leading-relaxed", sukoonMode ? "bg-slate-800/50 border-slate-700 text-slate-400" : "bg-gray-50 border-gray-100 text-gray-500")}>
              <p className="font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
