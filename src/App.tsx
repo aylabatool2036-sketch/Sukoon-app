@@ -66,14 +66,17 @@ export default function App() {
     <div 
       dir="ltr"
       className={cn(
-        "min-h-[100svh] w-full transition-colors duration-1000 relative flex flex-col",
+        "h-[100svh] w-full transition-colors duration-1000 relative flex flex-col overflow-hidden",
         sukoonMode ? "bg-slate-950 text-slate-100" : "bg-pastel-green text-gray-900"
       )}>
       {sukoonMode && <div className="fixed inset-0 z-0 atmosphere opacity-30 pointer-events-none" />}
       
       {/* App Top Bar */}
-      <header className="absolute top-0 left-0 right-0 z-40 px-6 pt-safe pb-4 flex items-center justify-between pointer-events-none mt-2">
-         <div className="flex items-center gap-2 pointer-events-auto">
+      <header className={cn(
+        "sticky top-0 left-0 right-0 z-40 px-6 pt-safe pb-4 flex items-center justify-between mt-2 backdrop-blur-md",
+        sukoonMode ? "bg-slate-950/80" : "bg-pastel-green/80"
+      )}>
+         <div className="flex items-center gap-2">
             <div className={cn(
               "w-8 h-8 rounded-xl flex items-center justify-center shadow-md transform -rotate-12 transition-colors",
               sukoonMode ? "bg-primary-strong/30 border border-primary-strong/20" : "bg-primary-strong"
@@ -85,7 +88,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area - Fixed vertical scrolling by ensuring flex-1 and overflow-y-auto */}
-      <main className="flex-1 pt-24 pb-40 px-4 sm:px-6 relative z-10 w-full scroll-smooth">
+      <main className="flex-1 pt-8 pb-40 px-4 sm:px-6 relative z-10 w-full scroll-smooth overflow-y-auto overscroll-contain">
         <div className="max-w-4xl mx-auto w-full flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
@@ -109,10 +112,10 @@ export default function App() {
 
       {/* Bottom Navigation Bar */}
       <nav className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 px-4 pb-8 pt-10 pb-safe transition-colors duration-1000",
+        "sticky bottom-0 left-0 right-0 z-50 px-4 pb-8 pt-10 pb-safe transition-colors duration-1000",
         sukoonMode 
-          ? "bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" 
-          : "bg-gradient-to-t from-white via-white/80 to-transparent"
+          ? "bg-slate-950/80 backdrop-blur-md" 
+          : "bg-pastel-green/80 backdrop-blur-md"
       )}>
         <div className={cn(
           "max-w-md mx-auto flex items-center justify-between px-6 py-3 rounded-full shadow-2xl backdrop-blur-xl border transition-all duration-500",
@@ -459,7 +462,7 @@ const PrivacyView = ({ onBack }: { onBack: () => void }) => {
   const { sukoonMode } = useAppStore();
   
   return (
-    <div className="space-y-8 max-w-2xl mx-auto pb-32">
+    <div className="space-y-8 max-w-2xl mx-auto pb-10">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
           <X className="w-6 h-6" />

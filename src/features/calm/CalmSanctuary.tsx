@@ -620,9 +620,9 @@ export const CalmSanctuary = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative">
       <EnhancedBackground sukoonMode={sukoonMode} theme={theme} />
-      <div className="relative z-10 space-y-12 pb-24">
+      <div className="relative z-10 space-y-12 pb-10">
         <header className="text-center space-y-4 pt-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-soft/10 text-primary-strong text-xs font-bold uppercase tracking-widest">

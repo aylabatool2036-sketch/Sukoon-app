@@ -25,11 +25,11 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     user-select: none;
-    /* Removed overflow: hidden and fixed height to allow natural scrolling */
-    min-height: 100svh;
-    width: 100%;
-    overflow-x: hidden;
-    overscroll-behavior-y: auto;
+    /* Fixed height to prevent double scrollbars and allow app internal scrolling */
+    height: 100svh;
+    width: 100vw;
+    overflow: hidden;
+    overscroll-behavior-y: none;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
